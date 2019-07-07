@@ -99,8 +99,8 @@ std::map<u_short, std::string> parseSS(const char* cmd) {
 }
 
 void FindProcess::init() {
-    this->tcpListen = parseSS("/sbin/ss -lnpt");
-    this->udpListen = parseSS("/sbin/ss -lnpu");
+    this->tcpListen = parseSS("ss -lnpt");
+    this->udpListen = parseSS("ss -lnpu");
 }
 
 std::string FindProcess::findListenTcpProcess(int port) {
@@ -120,7 +120,7 @@ std::string FindProcess::findListenUdpProcess(int port) {
 std::string FindProcess::findActiveTcpProcess(int sport, std::string dst_ip, int dport) {
     std::string result;
     std::stringstream cmd;
-    cmd << "/sbin/ss -anpt sport = :" << sport << " and dst " << dst_ip << ":" << dport;  
+    cmd << "ss -anpt sport = :" << sport << " and dst " << dst_ip << ":" << dport;  
     callProcessAndIterate(cmd.str().c_str(), [&result] (char *line) {
         std::string process;
         int index = splitLine(line, [&process] (std::string token, int i) {
