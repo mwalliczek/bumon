@@ -1,7 +1,7 @@
 #CPPFLAGS=-g -Wall -O6 --coverage
 #LDFLAGS=-g -lgcov --coverage
 
-CPPFLAGS=-g -Wall -O6
+CPPFLAGS=-g -Wall -O6 -std=gnu++11
 LDFLAGS=-g
 
 bumon.o:	bumon.cpp bumon.h FindProcess.h ActiveTcpConnections.h
