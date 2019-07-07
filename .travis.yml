@@ -14,9 +14,19 @@ install:
   # cppcheck
   - sudo apt-get install -qq cppcheck
 
-script: 
-  # Build and run this project
-  - g++ bumon.cpp -std=c++17 -o travis_gcc_cpp17_cppcheck
-  - ./travis_gcc_cpp17_cppcheck
-  # cppcheck
-  - cppcheck --quiet --error-exitcode=1 . 
+addons:
+  sonarcloud:
+    organization: "mwalliczek-github"
+    token:
+      secure: "HlFyC8n2iXqIzsjfL7xo1k1084Jco/nNU66PvWe/AoshEXEKK18nGenccqLNWsomuQ8vyg9bHFv4+jmIwovQAN05cCYEzdnaim8/sW5mWo7aN8O2e2gCC2UWICZXcVFC4ifu1/Ed1n6peQx2FTwHp6H7+/9KrLBtrzj6dyiz77eRcCJ4S7/ilc07D4IVyXN2z0LTAhzwAEHRH38qv2M+2OlUepWpSecDjXwO+qR4g606emLi0aglANZFXqX/jxiQFuRWOwl7NP9wmD39hLBeCBKHLnMaou7vs1g0iAdxPugpFLKOVjnMyDbPiTebxRwMV2G2ADCz6PAEuRsdkWJApygaxAshPNSfamCIXvZw4XFzSmqKeZPJd8owdHl39XfThGlb7eGamxJbyG2z1/02CuGW/A1iVrwmi7PDMPKoeP2fCPt0uWZoAzfHPi9dc8dqyX3y/vstecrp9OO1SjCua+pIOVSeWB7ie7UX1UiMDNd74RyaKyfOqrFLPhhorqXPVZZPKBdYi4RwnoLKJMXWZlk32xrVnzHqnXIoyrN4rpBQBTTAdGbqlwmSblt1QzRbGDajMTsguDXjhwcyqGBxekrGi/1/10aurtETmxh5ulHoqDZbj1MD/7na0YLCDI43M0M3GMPsxlceg+EBmnqaNyopjEDko+PTWp3yZ8ozeKc=" # encrypted value of your token
+
+script:
+  - make clean
+  # Wraps the compilation with the Build Wrapper to generate configuration (used
+  # later by the SonarQube Scanner) into the "bw-output" folder
+  - build-wrapper-linux-x86-64 --out-dir bw-output make all
+  # Execute some tests
+  - make test
+  # And finally run the SonarQube analysis - read the "sonar-project.properties"
+  # file to see the specific configuration
+  - sonar-scannerscript: 
