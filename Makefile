@@ -84,6 +84,6 @@ test:		InternNetTest.o ConnectionTest.o Connection.o InternNet.o FindProcess.o F
 		$(CC) $(LDFLAGS) $(LIBPATH) -o test test.o InternNetTest.o InternNet.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveTcpConnections.o ActiveTcpConnectionsTest.o ActiveConnections.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o -lcppunit $(LIBS)
 		
 clean:
-		rm *.o bumon test
+		rm -f *.o bumon test
 		
 all:		bumon

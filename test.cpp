@@ -15,11 +15,13 @@
 */
 
 #include <list>
+#include <iostream>
 
 #include <cppunit/CompilerOutputter.h>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/TestResult.h>
 #include <cppunit/TestResultCollector.h>
+#include <cppunit/XmlOutputter.h>
 #include <cppunit/TestRunner.h>
 #include <cppunit/BriefTestProgressListener.h>
 
@@ -71,6 +73,11 @@ int main (int argc, char* argv[])
     CPPUNIT_NS :: CompilerOutputter compileroutputter (&collectedresults, std::cerr);
     compileroutputter.write ();
     
+    // Output XML for Jenkins CPPunit plugin
+    std::ofstream xmlFileOut("cppTestBasicResults.xml");
+    CPPUNIT_NS :: XmlOutputter xmlOut(&collectedresults, xmlFileOut);
+    xmlOut.write();
+
     delete watching;
     delete activeTcpConnections;
     delete activeUdpConnections;
