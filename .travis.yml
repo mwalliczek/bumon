@@ -30,5 +30,5 @@ script:
   - sonar-scanner
 
 env:
-  - LIBPATH=-L/usr/local/lib/
+  - COVERAGE=yes
   

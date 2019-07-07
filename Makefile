@@ -1,8 +1,12 @@
-#CPPFLAGS=-g -Wall -O6 --coverage
-#LDFLAGS=-g -lgcov --coverage
-
-CPPFLAGS=-g -Wall -O6 -std=gnu++11
-LDFLAGS=-g
+ifeq ($(COVERAGE), yes)
+  CPPFLAGS=-g -Wall -O6 -std=gnu++11 --coverage
+  LDFLAGS=-g --coverage
+  LIBS=-lpcap -lstdc++ -pthread -lmysqlclient -lgcov
+else
+  CPPFLAGS=-g -Wall -O6 -std=gnu++11
+  LDFLAGS=-g
+  LIBS=-lpcap -lstdc++ -pthread -lmysqlclient
+endif
 
 CC = g++
 
@@ -43,7 +47,7 @@ ConfigfileParser.o:	ConfigfileParser.cpp ConfigfileParser.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ConfigfileParser.cpp
 
 bumon:		bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ActiveConnections.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o
-		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ActiveConnections.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o -lpcap -lstdc++ -pthread -lmysqlclient
+		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ActiveConnections.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o $(LIBS)
 		chmod +x bumon
 
 InternNetTest.o:	InternNetTest.cpp InternNet.h
@@ -77,7 +81,7 @@ test.o:		test.cpp
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c test.cpp
 
 test:		InternNetTest.o ConnectionTest.o Connection.o InternNet.o FindProcess.o FindProcessTest.o ActiveTcpConnectionsTest.o ActiveTcpConnections.o test.o ActiveConnections.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o
-		$(CC) $(LDFLAGS) $(LIBPATH) -o test test.o InternNetTest.o InternNet.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveTcpConnections.o ActiveTcpConnectionsTest.o ActiveConnections.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o  -lcppunit -lstdc++ -pthread -lmysqlclient
+		$(CC) $(LDFLAGS) $(LIBPATH) -o test test.o InternNetTest.o InternNet.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveTcpConnections.o ActiveTcpConnectionsTest.o ActiveConnections.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o -lcppunit $(LIBS)
 		
 clean:
 		rm *.o bumon test
