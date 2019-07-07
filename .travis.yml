@@ -9,7 +9,7 @@ before_install:
 
 install: 
   # C++17
-  - sudo apt-get install -qq g++-6 libpcap-dev libmysqlclient-dev
+  - sudo apt-get install -qq g++-6 libpcap-dev libmysqlclient-dev libcppunit-dev
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
 
 addons:
