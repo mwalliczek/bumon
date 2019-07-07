@@ -27,7 +27,7 @@ script:
   - make test
   # And finally run the SonarQube analysis - read the "sonar-project.properties"
   # file to see the specific configuration
-  - sonar-scannerscript: 
+  - sonar-scanner
 
 env:
   - LIBPATH=-L/usr/local/lib/
