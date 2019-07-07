@@ -54,6 +54,7 @@ bool handleIntern(std::string val) {
         mask = entry.substr(slash+1, std::string::npos);
         InternNet* newInternNet = new InternNet(ip.c_str(), mask.c_str());
         if (!newInternNet->valid) {
+            delete newInternNet;
             return true;
         }
         interns.push_back(newInternNet);
