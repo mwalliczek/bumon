@@ -26,6 +26,7 @@ script:
   # Execute some tests
   - make test
   - ./test
+  - gcov *.cpp
   # And finally run the SonarQube analysis - read the "sonar-project.properties"
   # file to see the specific configuration
   - sonar-scanner
