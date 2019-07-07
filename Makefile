@@ -2,7 +2,7 @@
 #LDFLAGS=-g -lgcov --coverage
 
 CPPFLAGS=-g -Wall -O6 -std=gnu++11
-LDFLAGS=-g
+LDFLAGS=-g $(LDFLAGS)
 
 CC = g++
 
