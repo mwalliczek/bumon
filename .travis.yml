@@ -30,5 +30,5 @@ script:
   - sonar-scannerscript: 
 
 env:
-  - LIB=/tmp/usr/lib
+  - LIB=-L/tmp/usr/lib
   
