@@ -2,6 +2,9 @@ language: cpp
 compiler: gcc
 dist: trusty
 
+services:
+  - mysql
+
 before_install:
   # C++17
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
@@ -25,6 +28,7 @@ script:
   - build-wrapper-linux-x86-64 --out-dir bw-output make all
   # Execute some tests
   - make test
+  - echo "" > ./createTestDb.sh
   - ./test
   - gcov *.cpp
   # And finally run the SonarQube analysis - read the "sonar-project.properties"
