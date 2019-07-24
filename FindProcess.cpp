@@ -23,6 +23,7 @@
 #include <exception>
 #include <functional>
 
+#include "bumon.h"
 #include "FindProcess.h"
 
 void callProcessAndIterate(const char* cmd, std::function<void (char*&)> func) {
@@ -65,7 +66,7 @@ int splitLine(char* line, std::function<void (std::string, int)> func) {
 
 std::map<u_short, std::string> parseSS(const char* cmd) {
     std::map<u_short, std::string> newListen;
-    callProcessAndIterate(cmd, [&newListen] (char *line) {
+    callProcessAndIterate((ssPath + cmd).c_str(), [&newListen] (char *line) {
         std::string dst, process;
         int index = splitLine(line, [&dst, &process] (std::string token, int i) {
             if (i == 3) {
@@ -99,8 +100,8 @@ std::map<u_short, std::string> parseSS(const char* cmd) {
 }
 
 void FindProcess::init() {
-    this->tcpListen = parseSS("ss -lnpt");
-    this->udpListen = parseSS("ss -lnpu");
+    this->tcpListen = parseSS(" -lnpt");
+    this->udpListen = parseSS(" -lnpu");
 }
 
 std::string FindProcess::findListenTcpProcess(int port) {
@@ -120,7 +121,7 @@ std::string FindProcess::findListenUdpProcess(int port) {
 std::string FindProcess::findActiveTcpProcess(int sport, std::string dst_ip, int dport) {
     std::string result;
     std::stringstream cmd;
-    cmd << "ss -anpt sport = :" << sport << " and dst " << dst_ip << ":" << dport;  
+    cmd << ssPath << " -anpt sport = :" << sport << " and dst " << dst_ip << ":" << dport;  
     callProcessAndIterate(cmd.str().c_str(), [&result] (char *line) {
         std::string process;
         int index = splitLine(line, [&process] (std::string token, int i) {
@@ -128,6 +129,7 @@ std::string FindProcess::findActiveTcpProcess(int sport, std::string dst_ip, int
                 process = token;
             }
         });
+        std::cout << "found " << process << " index " << index << std::endl;
         if (!process.empty() && index < 8) {
             result = parseProcess(process);
         }

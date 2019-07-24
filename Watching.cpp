@@ -37,6 +37,7 @@ void callWatching(Watching* watching) {
             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
 #define INSERT_TOP_CONTENT_STATEMENT "INSERT INTO top_content (timestamp, duration, foreign_ip, dst_port, protocol, content, bytes, inbound, intern) \
             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+#define INSERT_STATS_STATEMENT "INSERT INTO stats (timestamp, bytes, inbound, intern, dst_port, protocol) VALUES(?, ?, ?, ?, ?, ?)"
 
 Watching::Watching(bool startThread) {
     if (debug) {
@@ -91,6 +92,17 @@ void Watching::initMySQL(char* mysql_host, char* mysql_db, char* mysql_username,
       fprintf(stderr, " %s\n", mysql_stmt_error(mysql_stmt_content));
       exit(0);
     }
+    mysql_stmt_stats = mysql_stmt_init(mysql_connection);
+    if (!mysql_stmt_stats)
+    {
+      fprintf(stderr, " mysql_stmt_init(), out of memory\n");
+      exit(0);
+    }
+    if (mysql_stmt_prepare(mysql_stmt_stats, INSERT_STATS_STATEMENT, strlen(INSERT_STATS_STATEMENT))) {
+      fprintf(stderr, " mysql_stmt_prepare(), INSERT failed\n");
+      fprintf(stderr, " %s\n", mysql_stmt_error(mysql_stmt_stats));
+      exit(0);
+    }
 }
 
 Watching::Watching(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password) {
@@ -115,6 +127,7 @@ Watching::~Watching() {
         mysql_stmt_close(mysql_stmt_bandwidth);
         mysql_stmt_close(mysql_stmt_connections);
         mysql_stmt_close(mysql_stmt_content);
+        mysql_stmt_close(mysql_stmt_stats);
         mysql_close(mysql_connection);
     }
 }
@@ -143,6 +156,13 @@ class TopContent {
         long long int sum;
         bool intern, inbound;
 };
+
+std::string Watching::generateStatsId(char *statsbuff, int dst_port, int protocol, bool intern, bool inbound) {
+    std::stringstream result;
+    lastStatsTimestamp = std::string(statsbuff);
+    result << statsbuff << " " << dst_port << " " << protocol << " " << intern << " " << inbound;
+    return result.str();
+}
 
 void insertBandwidth(MYSQL_STMT* mysql_stmt_bandwidth, char* buff, short duration, long long int sum, short intern) {
                 MYSQL_BIND bind[4];
@@ -175,7 +195,7 @@ void insertBandwidth(MYSQL_STMT* mysql_stmt_bandwidth, char* buff, short duratio
 
 void insertConnection(MYSQL_STMT* mysql_stmt_connections, char* buff, short duration, const char* foreign_ip, int dst_port, short protocol, const char* process, long long int bytes, short inbound, 
         short intern) {
-                MYSQL_BIND bind[10];
+                MYSQL_BIND bind[9];
                 unsigned long str_length_buff = strlen(buff);
                 unsigned long str_length_ip = strlen(foreign_ip);
                 unsigned long str_length_process = strlen(process);
@@ -279,6 +299,49 @@ void insertContent(MYSQL_STMT* mysql_stmt_content, char* buff, short duration, c
                 }
 }
 
+void insertStats(MYSQL_STMT* mysql_stmt_stats, std::string timestamp, Statistics* stat) {
+                MYSQL_BIND bind[6];
+                unsigned long str_length_buff = timestamp.size();
+                unsigned long str_protocol = 0;
+                short inbound = (stat->inbound ? 1 : 0);
+                short intern = (stat->intern ? 1 : 0);
+                memset(bind, 0, sizeof(bind));
+                bind[0].buffer_type= MYSQL_TYPE_STRING;
+                bind[0].buffer= (char *)timestamp.c_str();
+                bind[0].length= &str_length_buff;
+                bind[1].buffer_type= MYSQL_TYPE_LONGLONG;
+                bind[1].buffer= (char *)&stat->sum;
+                bind[2].buffer_type= MYSQL_TYPE_SHORT;
+                bind[2].buffer= (char *)&inbound;
+                bind[3].buffer_type= MYSQL_TYPE_SHORT;
+                bind[3].buffer= (char *)&intern;
+                bind[4].buffer_type= MYSQL_TYPE_LONG;
+                bind[4].buffer= (char *)&stat->dst_port;
+                bind[5].buffer_type= MYSQL_TYPE_STRING;
+                if (stat->protocol == IPPROTO_TCP) {
+                    bind[5].buffer = (char *)"tcp";
+                    str_protocol = 3;
+                } else if (stat->protocol == IPPROTO_UDP) {
+                    bind[5].buffer = (char *)"udp";
+                    str_protocol = 3;
+                }
+                bind[5].length = &str_protocol;
+                /* Bind the buffers */
+                if (mysql_stmt_bind_param(mysql_stmt_stats, bind))
+                {
+                  logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_stats));
+                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_stats));
+                  exit(0);
+                }
+                /* Execute the INSERT statement - 1*/
+                if (mysql_stmt_execute(mysql_stmt_stats))
+                {
+                  logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_stats));
+                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_stats));
+                  exit(0);
+                }
+}
+
 void Watching::watching() {
         activeTcpConnections->checkTimeout();
         activeUdpConnections->checkTimeout();
@@ -289,6 +352,24 @@ void Watching::watching() {
             history.pop();
             history_mutex.unlock();
 
+            char statsbuff[20];
+            strftime(statsbuff, 20, "%Y-%m-%d %H:00:00", localtime(&current->time));
+            if (lastStatsTimestamp != std::string(statsbuff)) {
+                std::map<std::string, Statistics*>::iterator statsIter = statistics.begin();
+                while (statsIter != statistics.end()) {
+                    if (statsIter->first.rfind(statsbuff, 0) != 0) {
+                        logfile->log(3, "%s: %d %lli", statsIter->first.substr(0, 19).c_str(), statsIter->second->dst_port, statsIter->second->sum);
+                        if (mysql_connection != NULL) {
+                            insertStats(mysql_stmt_stats, statsIter->first.substr(0, 19), statsIter->second);
+                        }
+                        delete statsIter->second;
+                        statsIter = statistics.erase(statsIter);
+                    } else {
+                        statsIter++;
+                    }
+                }
+            }
+            
             char buff[20];
             strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&current->time));
 
@@ -356,6 +437,19 @@ void Watching::watching() {
                         insertConnection(mysql_stmt_connections, buff, 300, it->second->dst_ip.c_str(), it->second->dst_port, it->second->protocol, it->second->process.c_str(), it->second->sum, 0, it->second->intern);
                     }
                 }
+                std::string statsId = generateStatsId(statsbuff, it->second->dst_port, it->second->protocol, it->second->intern, it->second->inbound);
+                std::map<std::string, Statistics*>::iterator statsIter = statistics.find(statsId);
+                if (statsIter != statistics.end()) {
+                    statsIter->second->sum += it->second->sum;
+                } else {
+                    Statistics* newStats = new Statistics();
+                    newStats->dst_port = it->second->dst_port;
+                    newStats->protocol = it->second->protocol;
+                    newStats->sum = it->second->sum;
+                    newStats->intern = it->second->intern;
+                    newStats->inbound = it->second->inbound;
+                    statistics[statsId] = newStats;
+                }
                 delete it->second;
                 it = topConnections.erase(it);
             }
@@ -396,4 +490,5 @@ void Watching::watching() {
             iterAll++;
         }
         allConnections_mutex.unlock();
+
 }

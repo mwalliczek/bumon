@@ -33,6 +33,7 @@ extern std::mutex allConnections_mutex;
 extern Watching* watching;
 extern TrafficManager *trafficManager;
 extern Logfile* logfile;
+extern std::string ssPath;
 extern bool debug;
 
 extern struct in_addr self_ip;

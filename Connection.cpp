@@ -15,19 +15,27 @@
  */
 
 #include <netinet/in.h>
+#include <arpa/inet.h>
+#include <bits/stdc++.h>
 #include <string>
 #include <ctime>
 #include <list>
 #include <regex>
+#include <random>
 
 #include "InternNet.h"
 #include "Connection.h"
+#include "ConnectionIdentifier.h"
 #include "bumon.h"
 #include "tls.h"
 
 extern std::list<InternNet*> interns;
 
-Connection::Connection(struct in_addr src_ip, u_short src_port, struct in_addr dst_ip, u_short dst_port, u_char protocol, std::string process) {
+static std::default_random_engine generator;
+static std::uniform_int_distribution<int> distribution(INT_MIN, INT_MAX);
+
+Connection::Connection(struct in_addr src_ip, u_short src_port, struct in_addr dst_ip, u_short dst_port, 
+	u_char protocol, std::string process, std::map<ConnectionIdentifier, int>* map, const char* logMessage) {
     this->src_ip = src_ip;
     this->src_port = src_port;
     this->dst_ip = dst_ip;
@@ -37,7 +45,7 @@ Connection::Connection(struct in_addr src_ip, u_short src_port, struct in_addr d
     time(&begin);
     lastAct = 0;
     end = 0;
-    id = rand();
+    id = distribution(generator);
     ack = false;
     alreadyRunning = false;
     payload = false;
@@ -48,6 +56,18 @@ Connection::Connection(struct in_addr src_ip, u_short src_port, struct in_addr d
             intern = true;
             break;
         }
+    }
+    if (logfile->checkLevel(6)) {
+	logfile->log(6, "%s: %s = %d (%s)", logMessage, getIdentifier().c_str(), id, process.c_str());
+    }
+    ConnectionIdentifier identifier = ConnectionIdentifier(src_ip, src_port, dst_ip, dst_port);
+    (*map)[identifier] = id;
+    allConnections[id] = this;
+}
+
+Connection::~Connection() {
+    if (!identifier.empty()) {
+    	identifier.clear();
     }
 }
 
@@ -150,6 +170,16 @@ return;
 }
 
 static std::regex http("\\r\\nHost: (.*)\\r\\n", std::regex_constants::ECMAScript);
+
+std::string Connection::getIdentifier() {
+    if (identifier.empty()) {
+    	std::stringstream result;
+   	result << inet_ntoa(src_ip) << ":" << src_port;
+   	result << " > " << inet_ntoa(dst_ip) << ":" << dst_port;
+   	identifier = result.str();
+    }
+    return identifier;
+}
 
 void Connection::handleData(int ip_len, const u_char *payload_data, int size_payload) {
     time(&lastAct);

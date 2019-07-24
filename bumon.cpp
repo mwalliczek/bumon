@@ -157,6 +157,7 @@ TrafficManager *trafficManager;
 struct in_addr self_ip;
 Logfile* logfile;
 bool debug;
+std::string ssPath = "ss";
 
 /*
  * dissect/print packet
@@ -259,6 +260,9 @@ int main(int argc, char *argv[])
         }
         if ((configIter = config->options.find("device")) != config->options.end()) {
             dev = configIter->second;
+        }
+        if ((configIter = config->options.find("ssPath")) != config->options.end()) {
+            ssPath = configIter->second;
         }
     }
     logfile = new Logfile(logfilePath, logLevel);

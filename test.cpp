@@ -43,6 +43,7 @@ std::mutex allConnections_mutex;
 std::list<InternNet*> interns { new InternNet("10.69.0.0", "255.255.0.0"), new InternNet("10.133.96.0", "255.255.224.0") };
 Logfile* logfile;
 bool debug = true;
+std::string ssPath = "./ssMock";
 
 int main (int argc, char* argv[])
 {

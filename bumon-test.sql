@@ -45,7 +45,6 @@ CREATE TABLE `top_connections` (
   `protocol` varchar(3) DEFAULT NULL,
   `process` mediumtext DEFAULT NULL,
   `bytes` bigint(20) DEFAULT NULL,
-  `position` tinyint(4) DEFAULT NULL,
   `inbound` tinyint(4) DEFAULT NULL,
   `intern` tinyint(4) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -68,6 +67,24 @@ CREATE TABLE `top_content` (
   `inbound` tinyint(4) DEFAULT NULL,
   `intern` tinyint(4) DEFAULT NULL,
   `content` mediumtext DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `stats`
+--
+
+DROP TABLE IF EXISTS `stats`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `stats` (
+  `timestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `duration` int(11) DEFAULT NULL,
+  `dst_port` int(11) DEFAULT NULL,
+  `protocol` varchar(3) DEFAULT NULL,
+  `bytes` bigint(20) DEFAULT NULL,
+  `inbound` tinyint(4) DEFAULT NULL,
+  `intern` tinyint(4) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

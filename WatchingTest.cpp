@@ -39,27 +39,39 @@ class WatchingTest : public CPPUNIT_NS::TestFixture
 
 CPPUNIT_TEST_SUITE_REGISTRATION( WatchingTest );
 
+std::map<ConnectionIdentifier, int> con_map;
+
 void WatchingTest::testAll() {
  struct in_addr test_src_addr, test_dst_addr;
  inet_pton(AF_INET, "10.31.1.100", &test_src_addr);
  inet_pton(AF_INET, "10.31.1.100", &self_ip);
  inet_pton(AF_INET, "10.69.1.1", &test_dst_addr);
- Connection* con = new Connection(test_src_addr, 50, test_dst_addr, 100, 1, "testProcess");
+ Connection* con = new Connection(test_src_addr, 50, test_dst_addr, 100, 1, "testProcess", &con_map, "");
  
  allConnections[con->id] = con;
- std::map<int, long long int> traffic;
- traffic[con->id] = 100;
+ std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
+ (*traffic1)[con->id] = 100;
  
  time_t current;
  time(&current);
  
- watching->addHistory(current, &traffic);
+ watching->addHistory(current, traffic1);
  watching->watching();
  
+ struct tm * timeinfo = localtime ( &current );
+ timeinfo->tm_hour++;
+
+ current = mktime(timeinfo);
+ std::map<int, long long int>* traffic2 = new std::map<int, long long int>();
+ watching->addHistory(current, traffic2);
+ watching->watching();
+
 // CPPUNIT_ASSERT(allConnections.size() == 0);
 
  allConnections.clear();
  delete con;
+ delete traffic1;
+ delete traffic2;
 }
 
 void WatchingTest::testIntegration() {
@@ -67,24 +79,34 @@ void WatchingTest::testIntegration() {
  inet_pton(AF_INET, "10.31.1.100", &test_src_addr);
  inet_pton(AF_INET, "10.31.1.100", &self_ip);
  inet_pton(AF_INET, "10.69.1.1", &test_dst_addr);
- Connection* con = new Connection(test_src_addr, 50, test_dst_addr, 100, 1, "testProcess");
+ Connection* con = new Connection(test_src_addr, 50, test_dst_addr, 100, IPPROTO_TCP, "testProcess", &con_map, "");
  
  allConnections[con->id] = con;
- std::map<int, long long int> traffic;
- traffic[con->id] = 100;
+ std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
+ (*traffic1)[con->id] = 100;
  
  time_t current;
  time(&current);
  
  Watching* sut = new Watching((char *)"localhost", (char *)"bumondb", (char *)"testuser", (char *)"testpwd");
  
- sut->addHistory(current, &traffic);
+ sut->addHistory(current, traffic1);
  sut->watching();
  
+ struct tm * timeinfo = localtime ( &current );
+ timeinfo->tm_hour++;
+
+ current = mktime(timeinfo);
+ std::map<int, long long int>* traffic2 = new std::map<int, long long int>();
+ sut->addHistory(current, traffic2);
+ sut->watching();
+
 // CPPUNIT_ASSERT(allConnections.size() == 0);
 
  allConnections.clear();
  delete con;
  delete sut;
+ delete traffic1;
+ delete traffic2;
 }
 

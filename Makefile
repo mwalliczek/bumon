@@ -34,20 +34,20 @@ FindProcess.o:	FindProcess.cpp FindProcess.h
 TrafficManager.o:	TrafficManager.cpp TrafficManager.h Watching.h bumon.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c TrafficManager.cpp
 
-ActiveConnections.o:	ActiveConnections.cpp ActiveConnections.h
-		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ActiveConnections.cpp
+ConnectionIdentifier.o:	ConnectionIdentifier.cpp ConnectionIdentifier.h
+		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ConnectionIdentifier.cpp
 
-ActiveTcpConnections.o:	ActiveTcpConnections.cpp ActiveTcpConnections.h ActiveConnections.h Connection.h TrafficManager.h bumon.h
+ActiveTcpConnections.o:	ActiveTcpConnections.cpp ActiveTcpConnections.h ConnectionIdentifier.h Connection.h TrafficManager.h bumon.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ActiveTcpConnections.cpp
 
-ActiveUdpConnections.o:	ActiveUdpConnections.cpp ActiveUdpConnections.h ActiveConnections.h Connection.h TrafficManager.h bumon.h
+ActiveUdpConnections.o:	ActiveUdpConnections.cpp ActiveUdpConnections.h ConnectionIdentifier.h Connection.h TrafficManager.h bumon.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ActiveUdpConnections.cpp
 
 ConfigfileParser.o:	ConfigfileParser.cpp ConfigfileParser.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ConfigfileParser.cpp
 
-bumon:		bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ActiveConnections.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o
-		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ActiveConnections.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o $(LIBS)
+bumon:		bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o
+		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o $(LIBS)
 		chmod +x bumon
 
 InternNetTest.o:	InternNetTest.cpp InternNet.h
@@ -58,6 +58,10 @@ ConnectionTest.o:	ConnectionTest.cpp Connection.h
 
 FindProcessTest.o:	FindProcessTest.cpp FindProcess.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c FindProcessTest.cpp
+
+FindProcessIntegrationTest:	FindProcessIntegrationTest.cpp FindProcess.h FindProcess.o
+		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c FindProcessIntegrationTest.cpp -o FindProcessIntegrationTest.o
+		$(CC) $(LDFLAGS) $(LIBPATH) -o FindProcessIntegrationTest FindProcessIntegrationTest.o FindProcess.o $(LIBS)
 
 ActiveTcpConnectionsTest.o:	ActiveTcpConnectionsTest.cpp ActiveTcpConnections.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ActiveTcpConnectionsTest.cpp
@@ -77,11 +81,14 @@ LogfileTest.o:	LogfileTest.cpp Logfile.h
 ConfigfileParserTest.o:	ConfigfileParserTest.cpp ConfigfileParser.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ConfigfileParserTest.cpp
 		
+ConnectionIdentifierTest.o: ConnectionIdentifierTest.cpp ConnectionIdentifier.h
+		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ConnectionIdentifierTest.cpp
+
 test.o:		test.cpp
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c test.cpp
 
-test:		InternNetTest.o ConnectionTest.o Connection.o InternNet.o FindProcess.o FindProcessTest.o ActiveTcpConnectionsTest.o ActiveTcpConnections.o test.o ActiveConnections.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o
-		$(CC) $(LDFLAGS) $(LIBPATH) -o test test.o InternNetTest.o InternNet.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveTcpConnections.o ActiveTcpConnectionsTest.o ActiveConnections.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o -lcppunit $(LIBS)
+test:		InternNetTest.o ConnectionTest.o Connection.o InternNet.o FindProcess.o FindProcessTest.o ActiveTcpConnectionsTest.o ActiveTcpConnections.o test.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o
+		$(CC) $(LDFLAGS) $(LIBPATH) -o test test.o InternNetTest.o InternNet.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveTcpConnections.o ActiveTcpConnectionsTest.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o -lcppunit $(LIBS)
 		
 clean:
 		rm -f *.o *.gcov *.gcda *.gcno bumon test

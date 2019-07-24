@@ -19,7 +19,7 @@
 #include "bumon.h"
 #include "Connection.h"
 #include "FindProcess.h"
-#include "ActiveConnections.h"
+#include "ConnectionIdentifier.h"
 #include "ActiveUdpConnections.h"
 
 struct sniff_udp {
@@ -39,40 +39,33 @@ void ActiveUdpConnections::handlePacket(struct in_addr ip_src, struct in_addr ip
 	/* define/compute tcp header offset */
 	udp = (struct sniff_udp*)packet;
 	
-	std::string ip_src_str(inet_ntoa(ip_src));
-	std::string ip_dst_str(inet_ntoa(ip_dst));
 	int sport = ntohs(udp->th_sport);
 	int dport = ntohs(udp->th_dport);
 	
-	logfile->log(10, "%s:%d -> %s:%d len=%d", ip_src_str.c_str(), sport, ip_dst_str.c_str(), dport, ip_len);
+	if (logfile->checkLevel(10)) {
+	    std::string ip_src_str(inet_ntoa(ip_src));
+	    std::string ip_dst_str(inet_ntoa(ip_dst));
+
+	    logfile->log(10, "%s:%d -> %s:%d len=%d", ip_src_str.c_str(), sport, ip_dst_str.c_str(), dport, ip_len);
+	}
 	
 	Connection *foundConnection = NULL;
 	map_mutex.lock();
 	allConnections_mutex.lock();
-	std::map<std::string, int>::iterator iter;
-	if ((iter = map.find(generateIdentifier(ip_src_str, sport, ip_dst_str, dport))) != map.end()) {
+	std::map<ConnectionIdentifier, int>::iterator iter;
+	if ((iter = map.find(ConnectionIdentifier(ip_src, sport, ip_dst, dport))) != map.end()) {
 		foundConnection = allConnections[iter->second];
-	} else if ((iter = map.find(generateIdentifier(ip_dst_str, dport, ip_src_str, sport))) != map.end()) {
+	} else if ((iter = map.find(ConnectionIdentifier(ip_dst, dport, ip_src, sport))) != map.end()) {
 	    	foundConnection = allConnections[iter->second];
 	} else {
 		std::string process;
 		if (ip_dst.s_addr == self_ip.s_addr && !(process = findProcesses->findListenUdpProcess(dport)).empty()) {
-	            foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, process);
-		    logfile->log(6, "new udp connection: %s:%d > %s:%d = %d (%s)", ip_src_str.c_str(), sport, ip_dst_str.c_str(), dport, foundConnection->id, process.c_str());
-	            std::string identifier = generateIdentifier(ip_src_str, sport, ip_dst_str, dport);
-	            map[identifier] = foundConnection->id;
+	            foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, process, &map, "new udp connection");
 		} else if (ip_src.s_addr == self_ip.s_addr && !(process = findProcesses->findListenUdpProcess(sport)).empty()) {
-	            foundConnection = new Connection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, process);
-		    logfile->log(6, "new udp connection: %s:%d > %s:%d = %d (%s)", ip_dst_str.c_str(), dport, ip_src_str.c_str(), sport, foundConnection->id, process.c_str());
-	            std::string identifier = generateIdentifier(ip_dst_str, dport, ip_src_str, sport);
-	            map[identifier] = foundConnection->id;
+	            foundConnection = new Connection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, process, &map, "new udp connection");
 		} else {
-	            foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "");
-		    logfile->log(6, "new udp connection: %s:%d > %s:%d = %d (%s)", ip_src_str.c_str(), sport, ip_dst_str.c_str(), dport, foundConnection->id, "");
-	            std::string identifier = generateIdentifier(ip_src_str, sport, ip_dst_str, dport);
-	            map[identifier] = foundConnection->id;
+	            foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "", &map, "new udp connection");
 		}
-                allConnections[foundConnection->id] = foundConnection;
 	}
 	map_mutex.unlock();
 	allConnections_mutex.unlock();
@@ -84,7 +77,7 @@ void ActiveUdpConnections::handlePacket(struct in_addr ip_src, struct in_addr ip
 
 void ActiveUdpConnections::checkTimeout() {
 	map_mutex.lock();
-	std::map<std::string, int>::iterator iter = map.begin();
+	std::map<ConnectionIdentifier, int>::iterator iter = map.begin();
 	time_t current;
 	time(&current);
 	while (iter != map.end()) {

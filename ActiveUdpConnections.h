@@ -23,9 +23,10 @@
 
 #include "Connection.h"
 #include "TrafficManager.h"
+#include "ConnectionIdentifier.h"
 
 class ActiveUdpConnections {
-    std::map<std::string, int> map;
+    std::map<ConnectionIdentifier, int> map;
     std::mutex map_mutex;
     
     public:

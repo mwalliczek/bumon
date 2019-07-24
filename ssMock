@@ -1,0 +1,26 @@
+#!/bin/sh
+
+if [ "$1" == "-lnpt" ]
+  then
+    cat << EOF
+State    Recv-Q    Send-Q        Local Address:Port        Peer Address:Port                                                                                    
+LISTEN   0         100                 0.0.0.0:25               0.0.0.0:*        users:(("smtpd",pid=28047,fd=6),("smtpd",pid=27862,fd=6),("smtpd",pid=26983,fd=6),("master",pid=25788,fd=13))
+LISTEN   0         100                    [::]:25                  [::]:*        users:(("smtpd",pid=28047,fd=7),("smtpd",pid=27862,fd=7),("smtpd",pid=26983,fd=7),("master",pid=25788,fd=14))
+EOF
+fi
+if [ "$1" == "-lnpu" ]
+  then
+    cat << EOF
+State    Recv-Q    Send-Q        Local Address:Port        Peer Address:Port                                                                                    
+UNCONN   0         0                   0.0.0.0:1200             0.0.0.0:*        users:(("openvpn",pid=5158,fd=6))                                              
+UNCONN   0         0                   0.0.0.0:1500             0.0.0.0:*        users:(("openvpn",pid=5160,fd=6))                                              
+UNCONN   0         0                 127.0.0.1:53               0.0.0.0:*        users:(("named",pid=3740,fd=512))                                              
+EOF
+fi
+if [ "$1" == "-anpt" ]
+  then
+    cat << EOF
+State   Recv-Q    Send-Q        Local Address:Port         Peer Address:Port    
+ESTAB   0         0                  10.0.0.1:35358           127.0.0.1:25       users:(("telnet",pid=4509,fd=3))
+EOF
+fi

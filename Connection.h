@@ -21,11 +21,15 @@
 #include <string>
 #include <ctime>
 
+#include "ConnectionIdentifier.h"
+
 class Connection {
     bool payload;
+    std::string identifier;
     
     public:
-        Connection(struct in_addr, u_short, struct in_addr, u_short, u_char, std::string);
+        Connection(struct in_addr, u_short, struct in_addr, u_short, u_char, std::string, std::map<ConnectionIdentifier, int>*, const char*);
+        ~Connection();
         void stop();
         void handleData(int len, const u_char *payload, int size_payload);
         int id;
@@ -40,6 +44,7 @@ class Connection {
         u_short src_port,dst_port;
         time_t begin;
         u_char protocol;
+        std::string getIdentifier();
 };
 
 #endif

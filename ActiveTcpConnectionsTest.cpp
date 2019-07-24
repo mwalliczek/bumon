@@ -45,6 +45,7 @@ void ActiveTcpConnectionsTest::testAddOutbound() {
  inet_pton(AF_INET, "10.31.1.100", &self_ip);
  inet_pton(AF_INET, "10.69.1.1", &test_dst_addr);
  
+ CPPUNIT_ASSERT(allConnections.size() == 0);
  activeTcpConnections->handlePacket(test_src_addr, test_dst_addr, 50, (const unsigned char *) "\xab\xf6\x60\xc6\x0e\xa8\x96\x69\x76\xc0\x2e\xef\x50\x10\x01\x01\x7b\x50\x00\x00", 0); // Port 44022 -> 24774 Flags [.], ack 4294967216, win 257, length 0
  
  CPPUNIT_ASSERT(allConnections.size() == 1);

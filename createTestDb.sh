@@ -6,7 +6,7 @@ newDb='bumondb'
 host=localhost
 #host='%'
  
-commands="CREATE DATABASE \`${newDb}\`;CREATE USER '${newUser}'@'${host}' IDENTIFIED BY '${newDbPassword}';GRANT USAGE ON *.* TO '${newUser}'@'${host}' IDENTIFIED BY '${newDbPassword}';GRANT ALL privileges ON \`${newDb}\`.*
+commands="CREATE DATABASE IF NOT EXISTS \`${newDb}\`;CREATE USER IF NOT EXISTS '${newUser}'@'${host}' IDENTIFIED BY '${newDbPassword}';GRANT USAGE ON *.* TO '${newUser}'@'${host}' IDENTIFIED BY '${newDbPassword}';GRANT ALL privileges ON \`${newDb}\`.*
 TO '${newUser}'@'${host}';FLUSH PRIVILEGES;"
 
 echo "${commands}" | /usr/bin/mysql -u root -p

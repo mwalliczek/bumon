@@ -47,8 +47,12 @@ void getTime() {
     strftime(buff, 20, "%b %d %H:%M:%S", localtime(&current));
 }
 
+bool Logfile::checkLevel(int logLevel) {
+    return (logLevel <= this->logLevel);
+}
+
 void Logfile::log(int logLevel, std::string message) {
-    if (logLevel <= this->logLevel) {
+    if (checkLevel(logLevel)) {
         getTime();
         log_mutex.lock();
         fprintf(logfile, "%s %s\n", buff, message.c_str());
@@ -57,7 +61,7 @@ void Logfile::log(int logLevel, std::string message) {
 }
 
 void Logfile::log(int logLevel, const char *format, ...) {
-    if (logLevel <= this->logLevel) {
+    if (checkLevel(logLevel)) {
         getTime();
         fprintf(logfile, "%s ", buff);
         va_list arg;
