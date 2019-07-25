@@ -35,13 +35,9 @@ static std::default_random_engine generator;
 static std::uniform_int_distribution<int> distribution(INT_MIN, INT_MAX);
 
 Connection::Connection(struct in_addr src_ip, u_short src_port, struct in_addr dst_ip, u_short dst_port, 
-	u_char protocol, std::string process, std::map<ConnectionIdentifier, int>* map, const char* logMessage) {
-    this->src_ip = src_ip;
-    this->src_port = src_port;
-    this->dst_ip = dst_ip;
-    this->dst_port = dst_port;
-    this->protocol = protocol;
-    this->process = process;
+	u_char protocol, std::string process, std::map<ConnectionIdentifier, int>* map, const char* logMessage):
+	src_ip(src_ip), dst_ip(dst_ip), src_port(src_port), dst_port(dst_port), protocol(protocol), 
+	process(process) {
     time(&begin);
     lastAct = 0;
     end = 0;

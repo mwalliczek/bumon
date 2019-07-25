@@ -37,13 +37,13 @@ class Connection {
         bool ack;
         time_t lastAct;
         time_t end;
-        std::string process;
         bool alreadyRunning;
         std::string content;
         struct in_addr src_ip,dst_ip;
         u_short src_port,dst_port;
         time_t begin;
         u_char protocol;
+        std::string process;
         std::string getIdentifier();
 };
 
