@@ -129,7 +129,6 @@ std::string FindProcess::findActiveTcpProcess(int sport, std::string dst_ip, int
                 process = token;
             }
         });
-        std::cout << "found " << process << " index " << index << std::endl;
         if (!process.empty() && index < 8) {
             result = parseProcess(process);
         }
