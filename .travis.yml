@@ -28,7 +28,7 @@ script:
   - build-wrapper-linux-x86-64 --out-dir bw-output make all
   # Execute some tests
   - make test
-  - echo "" | ./createTestDb.sh
+  - ./createTestDb.sh
   - ./test
   - gcov *.cpp
   # And finally run the SonarQube analysis - read the "sonar-project.properties"
