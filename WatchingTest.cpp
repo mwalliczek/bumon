@@ -48,9 +48,9 @@ void WatchingTest::testAll() {
  inet_pton(AF_INET, "10.69.1.1", &test_dst_addr);
  Connection* con = new Connection(test_src_addr, 50, test_dst_addr, 100, 1, "testProcess", &con_map, "");
  
- allConnections[con->id] = con;
  std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
  (*traffic1)[con->id] = 100;
+ con->handleData(100, (const u_char*) "\r\nHost: www.example.com\r\n", 25);
  
  time_t current;
  time(&current);
@@ -79,11 +79,11 @@ void WatchingTest::testIntegration() {
  inet_pton(AF_INET, "10.31.1.100", &test_src_addr);
  inet_pton(AF_INET, "10.31.1.100", &self_ip);
  inet_pton(AF_INET, "10.69.1.1", &test_dst_addr);
- Connection* con = new Connection(test_src_addr, 50, test_dst_addr, 100, IPPROTO_TCP, "testProcess", &con_map, "");
+ Connection* con = new Connection(test_src_addr, 50, test_dst_addr, 80, IPPROTO_TCP, "testProcess", &con_map, "");
  
- allConnections[con->id] = con;
  std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
  (*traffic1)[con->id] = 100;
+ con->handleData(100, (const u_char*) "\r\nHost: www.example.com\r\n", 25);
  
  time_t current;
  time(&current);

@@ -32,16 +32,16 @@ void callWatching(Watching* watching) {
     }
 }
 
-#define INSERT_BANDWIDTH "INSERT INTO bandwidth (timestamp, duration, bytes, intern) VALUES(?, ?, ?, ?)"
-#define INSERT_TOP_CONNECTIONS_STATEMENT "INSERT INTO top_connections (timestamp, duration, foreign_ip, dst_port, protocol, process, bytes, inbound, intern) \
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
-#define INSERT_TOP_CONTENT_STATEMENT "INSERT INTO top_content (timestamp, duration, foreign_ip, dst_port, protocol, content, bytes, inbound, intern) \
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
-#define INSERT_STATS_STATEMENT "INSERT INTO stats (timestamp, bytes, inbound, intern, dst_port, protocol) VALUES(?, ?, ?, ?, ?, ?)"
+const char* insertBandwidthStatement="INSERT INTO bandwidth (timestamp, duration, bytes, intern) VALUES(?, ?, ?, ?)";
+const char* insertTopConnectionsStatement="INSERT INTO top_connections (timestamp, duration, foreign_ip, dst_port, protocol, process, bytes, inbound, intern) \
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+const char* insertTopContentStatement="INSERT INTO top_content (timestamp, duration, foreign_ip, dst_port, protocol, content, bytes, inbound, intern) \
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+const char* insertStatsStatement="INSERT INTO stats (timestamp, bytes, inbound, intern, dst_port, protocol) VALUES(?, ?, ?, ?, ?, ?)";
 
 Watching::Watching(bool startThread) {
     if (debug) {
-        printf("Start Watching\n");
+        logfile->log(11, "Start Watching");
     }
     mysql_connection = NULL;
     if (startThread) {
@@ -65,7 +65,7 @@ void Watching::initMySQL(char* mysql_host, char* mysql_db, char* mysql_username,
       fprintf(stderr, " mysql_stmt_init(), out of memory\n");
       exit(0);
     }
-    if (mysql_stmt_prepare(mysql_stmt_bandwidth, INSERT_BANDWIDTH, strlen(INSERT_BANDWIDTH))) {
+    if (mysql_stmt_prepare(mysql_stmt_bandwidth, insertBandwidthStatement, strlen(insertBandwidthStatement))) {
       fprintf(stderr, " mysql_stmt_prepare(), INSERT failed\n");
       fprintf(stderr, " %s\n", mysql_stmt_error(mysql_stmt_bandwidth));
       exit(0);
@@ -76,7 +76,7 @@ void Watching::initMySQL(char* mysql_host, char* mysql_db, char* mysql_username,
       fprintf(stderr, " mysql_stmt_init(), out of memory\n");
       exit(0);
     }
-    if (mysql_stmt_prepare(mysql_stmt_connections, INSERT_TOP_CONNECTIONS_STATEMENT, strlen(INSERT_TOP_CONNECTIONS_STATEMENT))) {
+    if (mysql_stmt_prepare(mysql_stmt_connections, insertTopConnectionsStatement, strlen(insertTopConnectionsStatement))) {
       fprintf(stderr, " mysql_stmt_prepare(), INSERT failed\n");
       fprintf(stderr, " %s\n", mysql_stmt_error(mysql_stmt_connections));
       exit(0);
@@ -87,7 +87,7 @@ void Watching::initMySQL(char* mysql_host, char* mysql_db, char* mysql_username,
       fprintf(stderr, " mysql_stmt_init(), out of memory\n");
       exit(0);
     }
-    if (mysql_stmt_prepare(mysql_stmt_content, INSERT_TOP_CONTENT_STATEMENT, strlen(INSERT_TOP_CONTENT_STATEMENT))) {
+    if (mysql_stmt_prepare(mysql_stmt_content, insertTopContentStatement, strlen(insertTopContentStatement))) {
       fprintf(stderr, " mysql_stmt_prepare(), INSERT failed\n");
       fprintf(stderr, " %s\n", mysql_stmt_error(mysql_stmt_content));
       exit(0);
@@ -98,7 +98,7 @@ void Watching::initMySQL(char* mysql_host, char* mysql_db, char* mysql_username,
       fprintf(stderr, " mysql_stmt_init(), out of memory\n");
       exit(0);
     }
-    if (mysql_stmt_prepare(mysql_stmt_stats, INSERT_STATS_STATEMENT, strlen(INSERT_STATS_STATEMENT))) {
+    if (mysql_stmt_prepare(mysql_stmt_stats, insertStatsStatement, strlen(insertStatsStatement))) {
       fprintf(stderr, " mysql_stmt_prepare(), INSERT failed\n");
       fprintf(stderr, " %s\n", mysql_stmt_error(mysql_stmt_stats));
       exit(0);
@@ -107,7 +107,7 @@ void Watching::initMySQL(char* mysql_host, char* mysql_db, char* mysql_username,
 
 Watching::Watching(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password) {
     if (debug) {
-        printf("Start Watching: %s %s %s %s\n", mysql_host, mysql_db, mysql_username, mysql_password);
+        logfile->log(11, "Start Watching: %s %s %s %s\n", mysql_host, mysql_db, mysql_username, mysql_password);
     }
     mysql_connection = mysql_init(NULL);
     initMySQL(mysql_host, mysql_db, mysql_username, mysql_password);
@@ -193,12 +193,12 @@ void insertBandwidth(MYSQL_STMT* mysql_stmt_bandwidth, char* buff, short duratio
                 }
 }
 
-void insertConnection(MYSQL_STMT* mysql_stmt_connections, char* buff, short duration, const char* foreign_ip, int dst_port, short protocol, const char* process, long long int bytes, short inbound, 
+void insertConnectionAndContent(MYSQL_STMT* mysql_stmt, char* buff, short duration, const char* foreign_ip, int dst_port, short protocol, const char* text, long long int bytes, short inbound, 
         short intern) {
                 MYSQL_BIND bind[9];
                 unsigned long str_length_buff = strlen(buff);
                 unsigned long str_length_ip = strlen(foreign_ip);
-                unsigned long str_length_process = strlen(process);
+                unsigned long str_length_text = strlen(text);
                 unsigned long str_protocol = 0;
                 memset(bind, 0, sizeof(bind));
                 bind[0].buffer_type= MYSQL_TYPE_STRING;
@@ -222,8 +222,8 @@ void insertConnection(MYSQL_STMT* mysql_stmt_connections, char* buff, short dura
                 bind[4].length = &str_protocol;
                 bind[4].buffer= (char *)&protocol;
                 bind[5].buffer_type= MYSQL_TYPE_STRING;
-                bind[5].buffer= (char *)process;
-                bind[5].length = &str_length_process;
+                bind[5].buffer= (char *)text;
+                bind[5].length = &str_length_text;
                 bind[6].buffer_type= MYSQL_TYPE_LONGLONG;
                 bind[6].buffer= (char *)&bytes;
                 bind[7].buffer_type= MYSQL_TYPE_SHORT;
@@ -231,72 +231,29 @@ void insertConnection(MYSQL_STMT* mysql_stmt_connections, char* buff, short dura
                 bind[8].buffer_type= MYSQL_TYPE_SHORT;
                 bind[8].buffer= (char *)&intern;
                 /* Bind the buffers */
-                if (mysql_stmt_bind_param(mysql_stmt_connections, bind))
+                if (mysql_stmt_bind_param(mysql_stmt, bind))
                 {
-                  logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_connections));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_connections));
+                  logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt));
+                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt));
                   exit(0);
                 }
                 /* Execute the INSERT statement - 1*/
-                if (mysql_stmt_execute(mysql_stmt_connections))
+                if (mysql_stmt_execute(mysql_stmt))
                 {
-                  logfile->log(1, " mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt_connections));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_connections));
+                  logfile->log(1, " mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt));
+                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt));
                   exit(0);
                 }
 }
 
-void insertContent(MYSQL_STMT* mysql_stmt_content, char* buff, short duration, const char* foreign_ip, int dst_port, short protocol, const char* content, long long int bytes, 
-        short inbound, short intern) {
-                MYSQL_BIND bind[10];
-                unsigned long str_length_buff = strlen(buff);
-                unsigned long str_length_ip = strlen(foreign_ip);
-                unsigned long str_length_content = strlen(content);
-                unsigned long str_protocol = 0;
-                memset(bind, 0, sizeof(bind));
-                bind[0].buffer_type= MYSQL_TYPE_STRING;
-                bind[0].buffer= buff;
-                bind[0].length= &str_length_buff;
-                bind[1].buffer_type= MYSQL_TYPE_SHORT;
-                bind[1].buffer= (char *)&duration;
-                bind[2].buffer_type= MYSQL_TYPE_STRING;
-                bind[2].buffer= (char *) foreign_ip;
-                bind[2].length = &str_length_ip;
-                bind[3].buffer_type= MYSQL_TYPE_LONG;
-                bind[3].buffer= (char *)&dst_port;
-                bind[4].buffer_type= MYSQL_TYPE_STRING;
-                if (protocol == IPPROTO_TCP) {
-                    bind[4].buffer = (char *)"tcp";
-                    str_protocol = 3;
-                } else if (protocol == IPPROTO_UDP) {
-                    bind[4].buffer = (char *)"udp";
-                    str_protocol = 3;
-                }
-                bind[4].length = &str_protocol;
-                bind[4].buffer= (char *)&protocol;
-                bind[5].buffer_type= MYSQL_TYPE_STRING;
-                bind[5].buffer= (char *)content;
-                bind[5].length = &str_length_content;
-                bind[6].buffer_type= MYSQL_TYPE_LONGLONG;
-                bind[6].buffer= (char *)&bytes;
-                bind[7].buffer_type= MYSQL_TYPE_SHORT;
-                bind[7].buffer= (char *)&inbound;
-                bind[8].buffer_type= MYSQL_TYPE_SHORT;
-                bind[8].buffer= (char *)&intern;
-                /* Bind the buffers */
-                if (mysql_stmt_bind_param(mysql_stmt_content, bind))
-                {
-                  logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_content));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_content));
-                  exit(0);
-                }
-                /* Execute the INSERT statement - 1*/
-                if (mysql_stmt_execute(mysql_stmt_content))
-                {
-                  logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_content));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_content));
-                  exit(0);
-                }
+void insertConnection(MYSQL_STMT* mysql_stmt_connections, char* buff, short duration, TopConnection* con) {
+    insertConnectionAndContent(mysql_stmt_connections, buff, duration, con->src_ip.c_str(), con->dst_port, 
+            con->protocol, con->process.c_str(), con->sum, con->inbound ? 1 : 0, con->intern);
+}
+
+void insertContent(MYSQL_STMT* mysql_stmt_content, char* buff, short duration, TopContent* con) {
+    insertConnectionAndContent(mysql_stmt_content, buff, duration, con->dst_ip.c_str(), con->dst_port, con->protocol, 
+            con->content.c_str(), con->sum, con->inbound ? 1 : 0, con->intern);
 }
 
 void insertStats(MYSQL_STMT* mysql_stmt_stats, std::string timestamp, Statistics* stat) {
@@ -431,11 +388,7 @@ void Watching::watching() {
             while (it!=topConnections.end()) {
                 logfile->log(3, "%lli %s > %s:%d (%s)", it->second->sum, it->second->src_ip.c_str(), it->second->dst_ip.c_str(), it->second->dst_port, it->second->process.c_str());
                 if (mysql_connection != NULL) {
-                    if (it->second->inbound) {
-                        insertConnection(mysql_stmt_connections, buff, 300, it->second->src_ip.c_str(), it->second->dst_port, it->second->protocol, it->second->process.c_str(), it->second->sum, 1, it->second->intern);
-                    } else {
-                        insertConnection(mysql_stmt_connections, buff, 300, it->second->dst_ip.c_str(), it->second->dst_port, it->second->protocol, it->second->process.c_str(), it->second->sum, 0, it->second->intern);
-                    }
+                    insertConnection(mysql_stmt_connections, buff, 300, it->second);
                 }
                 std::string statsId = generateStatsId(statsbuff, it->second->dst_port, it->second->protocol, it->second->intern, it->second->inbound);
                 std::map<std::string, Statistics*>::iterator statsIter = statistics.find(statsId);
@@ -464,13 +417,7 @@ void Watching::watching() {
             while (iCon != topContent.end()) {
                 logfile->log(3, "%lli %s > %s:%d (%s)", iCon->second->sum, iCon->second->src_ip.c_str(), iCon->second->dst_ip.c_str(), iCon->second->dst_port, iCon->second->content.c_str());
                 if (mysql_connection != NULL) {
-                    if (iCon->second->inbound) {
-                        insertContent(mysql_stmt_content, buff, 300, iCon->second->src_ip.c_str(), iCon->second->dst_port, iCon->second->protocol, iCon->second->content.c_str(), iCon->second->sum, 
-                                1, iCon->second->intern);
-                    } else {
-                        insertContent(mysql_stmt_content, buff, 300, iCon->second->dst_ip.c_str(), iCon->second->dst_port, iCon->second->protocol, iCon->second->content.c_str(), iCon->second->sum, 
-                                0, iCon->second->intern);
-                    }
+                    insertContent(mysql_stmt_content, buff, 300, iCon->second);
                 }
                 delete iCon->second;
                 iCon = topContent.erase(iCon);
