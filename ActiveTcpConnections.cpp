@@ -230,7 +230,9 @@ void ActiveTcpConnections::checkTimeout() {
 	time_t current;
 	time(&current);
 	while (iter != map.end()) {
+		allConnections_mutex.lock();
 		Connection* connection = allConnections[iter->second];
+		allConnections_mutex.unlock();
 		if (connection->ack == false && connection->end == 0 && difftime(current, connection->begin) > 30) {
 			if (logfile->checkLevel(5)) {
 			    logfile->log(5, "timeout aborted connection: %s (%s)", connection->getIdentifier().c_str(), 

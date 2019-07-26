@@ -23,27 +23,20 @@
 #include <thread>
 #include <mutex>
 
-#include <mysql/mysql.h>
+#include "Stats.h"
+#include "MySql.h"
 
 struct History {
     time_t time;
     std::map<int, long long int>* traffic;
 };
 
-struct Statistics {
-    int dst_port, protocol;
-    long long int sum;
-    bool intern, inbound;
-};
-
 class Watching {
     std::stack<History*> history;
     std::mutex history_mutex;
-    std::map<std::string, Statistics*> statistics;
-    std::string lastStatsTimestamp;
     std::thread* thread;
-    MYSQL *mysql_connection;
-    MYSQL_STMT *mysql_stmt_bandwidth, *mysql_stmt_connections, *mysql_stmt_content, *mysql_stmt_stats;
+    MySql *mysql_connection;
+    Stats* statistics;
     void initMySQL(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password);
     
     public:
@@ -53,7 +46,6 @@ class Watching {
         void addHistory(time_t time, std::map<int, long long int>* traffic);
         void watching();
         bool doWatch;
-        std::string generateStatsId(char* statsbuff, int dst_port, int protocol, bool intern, bool inbound);
 };
 
 #endif

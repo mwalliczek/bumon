@@ -81,7 +81,9 @@ void ActiveUdpConnections::checkTimeout() {
 	time_t current;
 	time(&current);
 	while (iter != map.end()) {
+		allConnections_mutex.lock();
 		Connection* connection = allConnections[iter->second];
+		allConnections_mutex.unlock();
 		if (difftime(current, connection->lastAct) > 600) {
         	        iter = map.erase(iter);
         	        connection->stop();
