@@ -178,10 +178,16 @@ void Watching::watching() {
             while (it!=topConnections.end()) {
                 logfile->log(3, "%lli %s > %s:%d (%s)", it->second->sum, it->second->src_ip.c_str(), it->second->dst_ip.c_str(), it->second->dst_port, it->second->process.c_str());
                 if (mysql_connection != NULL) {
-                    mysql_connection->insertConnection(buff, 300, it->second->src_ip.c_str(), it->second->dst_port,
-                            it->second->protocol, it->second->process.c_str(), it->second->sum, it->second->inbound ? 1 : 0, it->second->intern);
+                    if (it->second->inbound) {
+                        mysql_connection->insertConnection(buff, 300, it->second->src_ip.c_str(), it->second->dst_port,
+                                it->second->protocol, it->second->process.c_str(), it->second->sum, 1, it->second->intern);
+                    } else {
+                        mysql_connection->insertConnection(buff, 300, it->second->dst_ip.c_str(), it->second->dst_port,
+                                it->second->protocol, it->second->process.c_str(), it->second->sum, 0, it->second->intern);
+                    }
                 }
                 statistics->insert(statsbuff, it->second->dst_port, it->second->protocol, it->second->intern, it->second->inbound, it->second->sum);
+                statistics->insert(statsbuff, 0, 0, it->second->intern, it->second->inbound, it->second->sum);
                 delete it->second;
                 it = topConnections.erase(it);
             }
@@ -196,8 +202,13 @@ void Watching::watching() {
             while (iCon != topContent.end()) {
                 logfile->log(3, "%lli %s > %s:%d (%s)", iCon->second->sum, iCon->second->src_ip.c_str(), iCon->second->dst_ip.c_str(), iCon->second->dst_port, iCon->second->content.c_str());
                 if (mysql_connection != NULL) {
-                    mysql_connection->insertContent(buff, 300, iCon->second->src_ip.c_str(), iCon->second->dst_port,
-                            iCon->second->protocol, iCon->second->content.c_str(), iCon->second->sum, iCon->second->inbound ? 1 : 0, iCon->second->intern);
+                    if (iCon->second->inbound) {
+                        mysql_connection->insertContent(buff, 300, iCon->second->src_ip.c_str(), iCon->second->dst_port,
+                                iCon->second->protocol, iCon->second->content.c_str(), iCon->second->sum, 1, iCon->second->intern);
+                    } else {
+                        mysql_connection->insertContent(buff, 300, iCon->second->dst_ip.c_str(), iCon->second->dst_port,
+                                iCon->second->protocol, iCon->second->content.c_str(), iCon->second->sum, 0, iCon->second->intern);
+                    }
                 }
                 delete iCon->second;
                 iCon = topContent.erase(iCon);

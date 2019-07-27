@@ -28,7 +28,7 @@ void Stats::cleanup(char *statsbuff) {
                 while (statsIter != statistics.end()) {
                     if (statsIter->first.rfind(statsbuff, 0) != 0) {
                         logfile->log(3, "%s: %d %lli", statsIter->first.substr(0, 19).c_str(), statsIter->second->dst_port, statsIter->second->sum);
-                        if (mysql_connection != NULL) {
+                        if (mysql_connection != NULL && statsIter->second->sum >= 1024) {
                             mysql_connection->insertStats(statsIter->first.substr(0, 19), statsIter->second);
                         }
                         delete statsIter->second;

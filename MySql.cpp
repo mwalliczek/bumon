@@ -28,7 +28,7 @@ const char* insertTopConnectionsStatement="INSERT INTO top_connections (timestam
             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
 const char* insertTopContentStatement="INSERT INTO top_content (timestamp, duration, foreign_ip, dst_port, protocol, content, bytes, inbound, intern) \
             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
-const char* insertStatsStatement="INSERT INTO stats (timestamp, bytes, inbound, intern, dst_port, protocol) VALUES(?, ?, ?, ?, ?, ?)";
+const char* insertStatsStatement="INSERT INTO stats (timestamp, bytes, inbound, intern, dst_port, protocol, duration) VALUES(?, ?, ?, ?, ?, ?, 3600)";
 
 MySql::MySql(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password):
         mysql_host(mysql_host), mysql_db(mysql_db), mysql_username(mysql_username), mysql_password(mysql_password) {

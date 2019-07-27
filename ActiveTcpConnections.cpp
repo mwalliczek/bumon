@@ -211,6 +211,10 @@ void ActiveTcpConnections::handlePacket(struct in_addr ip_src, struct in_addr ip
                     foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, process, &map, "already running connection");
                 } else if (ip_src.s_addr == self_ip.s_addr && !(process = findProcesses->findListenTcpProcess(sport)).empty()) {
                     foundConnection = new Connection(ip_dst, dport, ip_src, sport, IPPROTO_TCP, process, &map, "already running connection");
+                } else if (ip_dst.s_addr == self_ip.s_addr && dport < 1024) {
+                    foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "", &map, "already running connection");
+                } else if (ip_src.s_addr == self_ip.s_addr && sport < 1024) {
+                    foundConnection = new Connection(ip_dst, dport, ip_src, sport, IPPROTO_TCP, "", &map, "already running connection");
                 } else {
                     foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "", &map, "already running connection");
                 }
