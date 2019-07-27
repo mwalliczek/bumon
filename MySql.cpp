@@ -32,11 +32,11 @@ const char* insertStatsStatement="INSERT INTO stats (timestamp, bytes, inbound, 
 
 MySql::MySql(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password):
         mysql_host(mysql_host), mysql_db(mysql_db), mysql_username(mysql_username), mysql_password(mysql_password) {
-    mysql_connection = mysql_init(NULL);
     init();
 }
 
 void MySql::init() {
+    mysql_connection = mysql_init(NULL);
     if (!mysql_real_connect(mysql_connection, mysql_host, mysql_username, mysql_password, mysql_db, 0, NULL, 0)) {
       fprintf(stderr, "Conection error : %s\n", mysql_error(mysql_connection));
       exit(0);
@@ -112,6 +112,7 @@ void MySql::insertBandwidth(char* buff, short duration, long long int sum, short
                 bind[2].buffer= (char *)&sum;
                 bind[3].buffer_type= MYSQL_TYPE_SHORT;
                 bind[3].buffer= (char *)&intern;
+    for (int tries=1; tries<5; tries++) {
                 /* Bind the buffers */
                 if (mysql_stmt_bind_param(mysql_stmt_bandwidth, bind))
                 {
@@ -120,19 +121,18 @@ void MySql::insertBandwidth(char* buff, short duration, long long int sum, short
                   exit(0);
                 }
                 /* Execute the INSERT statement - 1*/
-                if (mysql_stmt_execute(mysql_stmt_bandwidth))
-                {
-                  logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_bandwidth));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_bandwidth));
+                if (!mysql_stmt_execute(mysql_stmt_bandwidth)) break;
+                logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_bandwidth));
+                logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_bandwidth));
                   
-                  if (2013 == mysql_stmt_errno(mysql_stmt_bandwidth)) {
+                if (2013 == mysql_stmt_errno(mysql_stmt_bandwidth)) {
                     logfile->log(1, " trying to reconnect mysql");
                     destroy();
                     init();
-                  } else {
+                } else {
                     exit(0);
-                  }
                 }
+    }
 }
 
 void MySql::insertConnection(char* buff, short duration, const char* foreign_ip, int dst_port, short protocol, 
@@ -147,7 +147,7 @@ void MySql::insertContent(char* buff, short duration, const char* foreign_ip, in
 
 void MySql::insertConnectionAndContent(MYSQL_STMT* mysql_stmt, char* buff, short duration, const char* foreign_ip, 
         int dst_port, short protocol, const char* text, long long int bytes, short inbound, short intern) {
-                MYSQL_BIND bind[9];
+    MYSQL_BIND bind[9];
                 unsigned long str_length_buff = strlen(buff);
                 unsigned long str_length_ip = strlen(foreign_ip);
                 unsigned long str_length_text = strlen(text);
@@ -182,6 +182,8 @@ void MySql::insertConnectionAndContent(MYSQL_STMT* mysql_stmt, char* buff, short
                 bind[7].buffer= (char *)&inbound;
                 bind[8].buffer_type= MYSQL_TYPE_SHORT;
                 bind[8].buffer= (char *)&intern;
+                
+    for (int tries=1; tries<5; tries++) {
                 /* Bind the buffers */
                 if (mysql_stmt_bind_param(mysql_stmt, bind))
                 {
@@ -190,19 +192,18 @@ void MySql::insertConnectionAndContent(MYSQL_STMT* mysql_stmt, char* buff, short
                   exit(0);
                 }
                 /* Execute the INSERT statement - 1*/
-                if (mysql_stmt_execute(mysql_stmt))
-                {
-                  logfile->log(1, " mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt));
+                if (!mysql_stmt_execute(mysql_stmt)) break;
+                logfile->log(1, " mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt));
+                logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt));
 
-                  if (2013 == mysql_stmt_errno(mysql_stmt)) {
-                    logfile->log(1, " trying to reconnect mysql");
-                    destroy();
-                    init();
-                  } else {
-                    exit(0);
-                  }
+                if (2013 == mysql_stmt_errno(mysql_stmt)) {
+                  logfile->log(1, " trying to reconnect mysql");
+                  destroy();
+                  init();
+                } else {
+                  exit(0);
                 }
+    }
 }
 
 void MySql::insertStats(std::string timestamp, Statistics* stat) {
@@ -232,6 +233,7 @@ void MySql::insertStats(std::string timestamp, Statistics* stat) {
                     str_protocol = 3;
                 }
                 bind[5].length = &str_protocol;
+    for (int tries=1; tries<5; tries++) {
                 /* Bind the buffers */
                 if (mysql_stmt_bind_param(mysql_stmt_stats, bind))
                 {
@@ -240,17 +242,16 @@ void MySql::insertStats(std::string timestamp, Statistics* stat) {
                   exit(0);
                 }
                 /* Execute the INSERT statement - 1*/
-                if (mysql_stmt_execute(mysql_stmt_stats))
-                {
-                  logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_stats));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_stats));
+                if (!mysql_stmt_execute(mysql_stmt_stats)) break;
+                logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_stats));
+                logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_stats));
 
-                  if (2013 == mysql_stmt_errno(mysql_stmt_stats)) {
-                    logfile->log(1, " trying to reconnect mysql");
-                    destroy();
-                    init();
-                  } else {
-                    exit(0);
-                  }
+                if (2013 == mysql_stmt_errno(mysql_stmt_stats)) {
+                  logfile->log(1, " trying to reconnect mysql");
+                  destroy();
+                  init();
+                } else {
+                  exit(0);
                 }
+  }
 }
