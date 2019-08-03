@@ -24,9 +24,14 @@ class Stats {
     std::map<std::string, Statistics*> statistics;
     std::string lastStatsTimestamp;
     MySql* mysql_connection;
+    char* sender;
+    char* recipient;
+    
+    std::string checkSpike(const char *statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum);
+    void sendMail(std::map<std::string, std::string>* messages);
     
     public:
-        Stats(MySql* mysql_connection);
+        Stats(MySql* mysql_connection, char* sender, char* recipient);
         void cleanup(char *statsbuff);
         void insert(char *statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum);
 };

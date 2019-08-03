@@ -217,6 +217,7 @@ int main(int argc, char *argv[])
     std::string logfilePath, dev;
     int logLevel = 4;
     std::string mysql_host, mysql_user, mysql_pass, mysql_db;
+    std::string warning_mail_sender, warning_mail_recipient;
     debug = false;
 
     while ((c = getopt (argc, argv, "c:di:v:")) != -1)
@@ -264,6 +265,12 @@ int main(int argc, char *argv[])
         if ((configIter = config->options.find("ssPath")) != config->options.end()) {
             ssPath = configIter->second;
         }
+        if ((configIter = config->options.find("warning_mail_sender")) != config->options.end()) {
+            warning_mail_sender = configIter->second;
+        }
+        if ((configIter = config->options.find("warning_mail_recipient")) != config->options.end()) {
+            warning_mail_recipient = configIter->second;
+        }
     }
     logfile = new Logfile(logfilePath, logLevel);
 
@@ -289,7 +296,9 @@ int main(int argc, char *argv[])
     findProcesses->init();
     
     if (!mysql_host.empty() && !mysql_user.empty() && !mysql_pass.empty() && !mysql_db.empty()) {
-        watching = new Watching((char *) mysql_host.c_str(), (char *) mysql_db.c_str(), (char *) mysql_user.c_str(), (char *) mysql_pass.c_str());
+        watching = new Watching((char *) mysql_host.c_str(), (char *) mysql_db.c_str(), (char *) mysql_user.c_str(), 
+                (char *) mysql_pass.c_str(), (char *) warning_mail_sender.c_str(), 
+                (char *) warning_mail_recipient.c_str());
     } else {
         watching = new Watching(true);
     }

@@ -45,19 +45,19 @@ Watching::Watching(bool startThread) {
         doWatch = false;
         thread = NULL;
     }
-    statistics = new Stats(NULL);
+    statistics = new Stats(NULL, NULL, NULL);
 }
 
 void Watching::initMySQL(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password) {
     mysql_connection = new MySql(mysql_host, mysql_db, mysql_username, mysql_password);
 }
 
-Watching::Watching(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password) {
+Watching::Watching(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password, char* warning_main_sender, char* warning_main_recipient) {
     if (debug) {
         logfile->log(11, "Start Watching: %s %s %s %s\n", mysql_host, mysql_db, mysql_username, mysql_password);
     }
     initMySQL(mysql_host, mysql_db, mysql_username, mysql_password);
-    statistics = new Stats(mysql_connection);
+    statistics = new Stats(mysql_connection, warning_main_sender, warning_main_recipient);
     
     doWatch = true;
     thread = new std::thread(callWatching, this);

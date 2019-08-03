@@ -17,13 +17,23 @@
 #ifndef MYSQL_H
 #define MYSQL_H
 
+#include <vector>
+
 #include <mysql/mysql.h>
 
 #include "Statistics.h"
 
+struct HostWithBandwidth {
+    std::string host;
+    long long int bytes;
+};
+
+const char* protocolName(short protocol);
+
 class MySql {
     MYSQL *mysql_connection;
-    MYSQL_STMT *mysql_stmt_bandwidth, *mysql_stmt_connections, *mysql_stmt_content, *mysql_stmt_stats;
+    MYSQL_STMT *mysql_stmt_bandwidth, *mysql_stmt_connections, *mysql_stmt_content, *mysql_stmt_insert_stats,
+        *mysql_stmt_select_stats, *mysql_stmt_select_hosts;
 
     char* mysql_host;
     char* mysql_db;
@@ -45,7 +55,9 @@ class MySql {
             const char* text, long long int bytes, short inbound, short intern);
         void insertContent(char* buff, short duration, const char* foreign_ip, int dst_port, short protocol,
             const char* text, long long int bytes, short inbound, short intern);
-        void insertStats(std::string timestamp, Statistics* stat);
+        void insertStats(char* buff, Statistics* stat);
+        std::vector<long long int>* lookupStats(char* buff, int dst_port, int protocol, bool intern, bool inbound);
+        std::vector<HostWithBandwidth>* lookupTopHostsWithBandwidth(char* buff, int dst_port, int protocol, bool inbound);
 };
 
 #endif
