@@ -32,6 +32,7 @@ const char* insertStatsStatement="INSERT INTO stats (timestamp, bytes, inbound, 
 const char* selectStatsStatement="SELECT bytes FROM stats WHERE inbound=? AND intern=? AND dst_port=? AND protocol=? AND HOUR(timestamp)=HOUR(?) ORDER BY bytes";
 const char* selectHostsStatement="SELECT foreign_ip, SUM(bytes) AS s FROM top_connections WHERE timestamp >= ? AND \
             timestamp < DATE_ADD(?, INTERVAL 1 HOUR) AND dst_port = ? AND protocol = ? AND inbound = ? GROUP BY foreign_ip ORDER BY s DESC";
+const char* numberStatsStatement="SELECT COUNT(DISTINCT timestamp) FROM stats WHERE HOUR(timestamp)=HOUR(?)";
 
 MySql::MySql(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password):
         mysql_host(mysql_host), mysql_db(mysql_db), mysql_username(mysql_username), mysql_password(mysql_password) {
@@ -65,6 +66,7 @@ void MySql::init() {
     mysql_stmt_insert_stats = initStmt(mysql_connection, insertStatsStatement);
     mysql_stmt_select_stats = initStmt(mysql_connection, selectStatsStatement);
     mysql_stmt_select_hosts = initStmt(mysql_connection, selectHostsStatement);
+    mysql_stmt_number_stats = initStmt(mysql_connection, numberStatsStatement);
 }
 
 MySql::~MySql() {
@@ -78,21 +80,24 @@ void MySql::destroy() {
     mysql_stmt_close(mysql_stmt_insert_stats);
     mysql_stmt_close(mysql_stmt_select_stats);
     mysql_stmt_close(mysql_stmt_select_hosts);
+    mysql_stmt_close(mysql_stmt_number_stats);
     mysql_close(mysql_connection);
 }
 
-const char* protocolTcp = "tcp";
-const char* protocolUdp = "udp";
-const char* protocolNull = "";
+char name[256];
 
 const char* protocolName(short protocol) {
     if (protocol == IPPROTO_TCP) {
-      return protocolTcp;
+      return "tcp";
     }
     if (protocol == IPPROTO_UDP) {
-      return protocolUdp;
+      return "ucp";
     }
-    return protocolNull;
+    if (protocol == 255) {
+      return "";
+    }
+    snprintf(name, 256, "unknown (%i)", protocol);
+    return name;
 }
 
 void mapProtocol(short protocol, unsigned long *str_length, MYSQL_BIND* bind) {
@@ -371,4 +376,51 @@ std::vector<HostWithBandwidth>* MySql::lookupTopHostsWithBandwidth(char* buff, i
       resultVector->push_back(entry);
     }
     return resultVector;
+}
+
+int MySql::lookupNumberStats(char* buff) {
+    MYSQL_BIND bind[1];
+    unsigned long str_length_buff = strlen(buff);
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type= MYSQL_TYPE_STRING;
+    bind[0].buffer= buff;
+    bind[0].length= &str_length_buff;
+
+    MYSQL_BIND resultBind[1];
+    int number;
+    memset(resultBind, 0, sizeof(resultBind));
+    resultBind[0].buffer_type= MYSQL_TYPE_LONG;
+    resultBind[0].buffer= (char *)&number;
+
+    /* Bind the buffers */
+    if (mysql_stmt_bind_param(mysql_stmt_number_stats, bind)) {
+      logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      exit(0);
+    }
+    if (mysql_stmt_execute(mysql_stmt_number_stats)) {
+      logfile->log(1, " mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      exit(0);
+    }
+    if (mysql_stmt_bind_result(mysql_stmt_number_stats, resultBind)) {
+      logfile->log(1, " mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      exit(0);
+    }
+    if (mysql_stmt_store_result(mysql_stmt_number_stats)) {
+      logfile->log(1, " mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      exit(0);
+    }
+    my_ulonglong resultCount = mysql_stmt_num_rows(mysql_stmt_number_stats);
+    if (resultCount == 0) {
+      return 0;
+    }
+    if (mysql_stmt_fetch(mysql_stmt_number_stats)) {
+      logfile->log(1, " mysql_stmt_fetch() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      exit(0);
+    }
+    return number;
 }

@@ -82,6 +82,7 @@ void StatsTest::testCheckSpike() {
  
  sut->insert((char*) "2019-07-01 17:00:00", 0, 0, false, true, 20480);
  sut->insert((char*) "2019-07-01 17:00:00", 80, IPPROTO_TCP, false, true, 20480);
+ sut->insert((char*) "2019-07-01 17:00:00", 443, IPPROTO_TCP, false, true, 2048);
  
  sut->cleanup((char*) "2019-07-01 18:00:00");
 

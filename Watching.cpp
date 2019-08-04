@@ -187,7 +187,7 @@ void Watching::watching() {
                     }
                 }
                 statistics->insert(statsbuff, it->second->dst_port, it->second->protocol, it->second->intern, it->second->inbound, it->second->sum);
-                statistics->insert(statsbuff, 0, 0, it->second->intern, it->second->inbound, it->second->sum);
+                statistics->insert(statsbuff, 0, 255, it->second->intern, it->second->inbound, it->second->sum);
                 delete it->second;
                 it = topConnections.erase(it);
             }

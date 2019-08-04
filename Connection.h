@@ -29,8 +29,9 @@ class Connection {
     
     public:
         Connection(struct in_addr, u_short, struct in_addr, u_short, u_char, std::string, std::map<ConnectionIdentifier, int>*, const char*);
-        ~Connection();
+        Connection(struct in_addr, struct in_addr, u_char);
         void stop();
+        void handleData(int len);
         void handleData(int len, const u_char *payload, int size_payload);
         int id;
         bool intern;

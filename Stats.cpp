@@ -42,7 +42,7 @@ void Stats::cleanup(char *statsbuff) {
         std::map<std::string, std::string> messages;
         while (statsIter != statistics.end()) {
             if (statsIter->first.rfind(statsbuff, 0) != 0 && 0 == statsIter->second->dst_port && 0 == statsIter->second->protocol) {
-                std::string checkSpikeResult = checkSpike(statsIter->first.substr(0, 19).c_str(), 0, 0, statsIter->second->intern, 
+                std::string checkSpikeResult = checkSpike(statsIter->first.substr(0, 19).c_str(), 0, 255, statsIter->second->intern, 
                         statsIter->second->inbound, statsIter->second->sum);
                 messages[generateMessagesId(statsIter)] = checkSpikeResult;
             }
@@ -57,7 +57,7 @@ void Stats::cleanup(char *statsbuff) {
                     std::string messagesId = generateMessagesId(statsIter);
                     std::map<std::string, std::string>::iterator messagesIter = messages.find(messagesId);
                     if (messagesIter == messages.end()) {
-                        messages[messagesId] = checkSpike(statsIter->first.substr(0, 19).c_str(), 0, 0, statsIter->second->intern,
+                        messages[messagesId] = checkSpike(statsIter->first.substr(0, 19).c_str(), 0, 255, statsIter->second->intern,
                                 statsIter->second->inbound, 0);
                         messagesIter = messages.find(messagesId);
                     }
@@ -138,6 +138,11 @@ std::string resolveIp(std::string ipstr) {
 std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum) {
     std::vector<long long int>* stats = mysql_connection->lookupStats((char*) statsbuff, dst_port, protocol, intern, inbound);
     int length = stats->size();
+    int number = mysql_connection->lookupNumberStats((char*) statsbuff);
+    while (length < number) {
+        stats->insert(stats->begin(), (long long int) 0);
+        length = stats->size();
+    }
     if (length < 10) {
         delete stats;
         return "";
@@ -146,9 +151,6 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
     long long int q75 = (*stats)[length * 3 / 4];
     delete stats;
     long long int qdiff = q75 - q25;
-    if (qdiff == 0) {
-        return "";
-    }
     std::string message;
     if (sum < q25) {
         long long int diff = q25 - sum;
@@ -157,12 +159,12 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
         }
     } else if (sum > q75) {
         long long int diff = sum - q75;
-        if ((double) diff / (double) qdiff > 1.5) {
+        if (qdiff == 0 || (double) diff / (double) qdiff > 1.5) {
             message = " is higher: " + formatBandwidth(sum) + " (" + formatBandwidth(q75) + ")\n";
         }
     }
     if (!message.empty()) {
-        if (dst_port == 0) {
+        if (protocol == 255) {
             message = std::string(inbound ? "Inbound" : "Outbound") + std::string(intern ? " intern" : " extern") + message;
         } else {
             message = "  Port " + std::to_string(dst_port) + " (" + std::string(protocolName(protocol)) + ")" + message;

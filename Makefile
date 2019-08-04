@@ -52,8 +52,11 @@ MySql.o:	MySql.cpp MySql.h
 Stats.o:	Stats.cpp Stats.h Statistics.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c Stats.cpp
 
-bumon:		bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o
-		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o $(LIBS)
+ip.o:		ip.cpp ip.h
+		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ip.cpp
+
+bumon:		bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o ip.o
+		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o InternNet.o FindProcess.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o ip.o $(LIBS)
 		chmod +x bumon
 
 InternNetTest.o:	InternNetTest.cpp InternNet.h

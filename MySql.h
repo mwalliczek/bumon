@@ -33,7 +33,7 @@ const char* protocolName(short protocol);
 class MySql {
     MYSQL *mysql_connection;
     MYSQL_STMT *mysql_stmt_bandwidth, *mysql_stmt_connections, *mysql_stmt_content, *mysql_stmt_insert_stats,
-        *mysql_stmt_select_stats, *mysql_stmt_select_hosts;
+        *mysql_stmt_select_stats, *mysql_stmt_select_hosts, *mysql_stmt_number_stats;
 
     char* mysql_host;
     char* mysql_db;
@@ -58,6 +58,7 @@ class MySql {
         void insertStats(char* buff, Statistics* stat);
         std::vector<long long int>* lookupStats(char* buff, int dst_port, int protocol, bool intern, bool inbound);
         std::vector<HostWithBandwidth>* lookupTopHostsWithBandwidth(char* buff, int dst_port, int protocol, bool inbound);
+        int lookupNumberStats(char* buff);
 };
 
 #endif

@@ -16,12 +16,8 @@
 
 #include "ConnectionIdentifier.h"
 
-ConnectionIdentifier::ConnectionIdentifier(struct in_addr ip_src, int sport, struct in_addr ip_dst, int dport) {
-    this->ip_src = ip_src;
-    this->sport = sport;
-    this->ip_dst = ip_dst;
-    this->dport = dport;
-}
+ConnectionIdentifier::ConnectionIdentifier(struct in_addr ip_src, int sport, struct in_addr ip_dst, int dport):
+        ip_src(ip_src), sport(sport), ip_dst(ip_dst), dport(dport) { }
 
 bool operator<(const ConnectionIdentifier &c1, const ConnectionIdentifier &c2) {
     if (c1.ip_src.s_addr < c2.ip_src.s_addr) {

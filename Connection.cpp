@@ -34,10 +34,8 @@ extern std::list<InternNet*> interns;
 static std::default_random_engine generator;
 static std::uniform_int_distribution<int> distribution(INT_MIN, INT_MAX);
 
-Connection::Connection(struct in_addr src_ip, u_short src_port, struct in_addr dst_ip, u_short dst_port, 
-	u_char protocol, std::string process, std::map<ConnectionIdentifier, int>* map, const char* logMessage):
-	src_ip(src_ip), dst_ip(dst_ip), src_port(src_port), dst_port(dst_port), protocol(protocol), 
-	process(process) {
+Connection::Connection(struct in_addr src_ip, struct in_addr dst_ip, u_char protocol):
+	src_ip(src_ip), dst_ip(dst_ip), protocol(protocol) {
     time(&begin);
     lastAct = 0;
     end = 0;
@@ -53,18 +51,21 @@ Connection::Connection(struct in_addr src_ip, u_short src_port, struct in_addr d
             break;
         }
     }
+    allConnections[id] = this;
+}
+
+Connection::Connection(struct in_addr src_ip, u_short src_port, struct in_addr dst_ip, u_short dst_port, 
+	u_char protocol, std::string process, std::map<ConnectionIdentifier, int>* map, const char* logMessage):
+	Connection(src_ip, dst_ip, protocol) {
+    this->src_port = src_port;
+    this->dst_port = dst_port;
+    this->process = process;
+    
     if (logfile->checkLevel(6)) {
 	logfile->log(6, "%s: %s = %d (%s)", logMessage, getIdentifier().c_str(), id, process.c_str());
     }
     ConnectionIdentifier identifier = ConnectionIdentifier(src_ip, src_port, dst_ip, dst_port);
     (*map)[identifier] = id;
-    allConnections[id] = this;
-}
-
-Connection::~Connection() {
-    if (!identifier.empty()) {
-    	identifier.clear();
-    }
 }
 
 /*
@@ -177,9 +178,13 @@ std::string Connection::getIdentifier() {
     return identifier;
 }
 
-void Connection::handleData(int ip_len, const u_char *payload_data, int size_payload) {
+void Connection::handleData(int ip_len) {
     time(&lastAct);
     trafficManager->handleTraffic(id, ip_len);
+}
+
+void Connection::handleData(int len, const u_char *payload_data, int size_payload) {
+    handleData(len);
     if (!payload && !alreadyRunning && size_payload > 0) {
 	if (dst_port == 80) {
             std::string contentString((const char*) payload_data, size_payload);
