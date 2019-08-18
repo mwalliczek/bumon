@@ -14,32 +14,21 @@
  * limitations under the License.
  */
 
-#include "ConnectionIdentifier.h"
+#include <sstream>
 
-ConnectionIdentifier::ConnectionIdentifier(struct in_addr ip_src, int sport, struct in_addr ip_dst, int dport):
+#include "ConnectionIdentifier.h"
+#include "Ipv4Addr.h"
+
+template<typename IP>
+ConnectionIdentifier<IP>::ConnectionIdentifier(IP ip_src, int sport, IP ip_dst, int dport):
         ip_src(ip_src), sport(sport), ip_dst(ip_dst), dport(dport) { }
 
-bool operator<(const ConnectionIdentifier &c1, const ConnectionIdentifier &c2) {
-    if (c1.ip_src.s_addr < c2.ip_src.s_addr) {
-        return true;
-    }
-    if (c1.ip_src.s_addr > c2.ip_src.s_addr) {
-        return false;
-    }
-    if (c1.sport < c2.sport) {
-        return true;
-    }
-    if (c1.sport > c2.sport) {
-        return false;
-    }
-    if (c1.ip_dst.s_addr < c2.ip_dst.s_addr) {
-        return true;
-    }
-    if (c1.ip_dst.s_addr > c2.ip_dst.s_addr) {
-        return false;
-    }
-    if (c1.dport < c2.dport) {
-        return true;
-    }
-    return false;
+template<typename IP>
+std::string ConnectionIdentifier<IP>::toString() const {
+    std::stringstream result;
+    result << ip_src.toString() << ":" << sport;
+    result << " > " << ip_dst.toString() << ":" << dport;
+    return result.str();
 }
+
+template class ConnectionIdentifier<Ipv4Addr>;

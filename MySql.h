@@ -47,7 +47,7 @@ class MySql {
         
     
     public:
-        MySql(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password);
+        explicit MySql(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password);
         ~MySql();
         
         void insertBandwidth(char* buff, short duration, long long int sum, short intern);

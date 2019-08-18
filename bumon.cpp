@@ -115,28 +115,20 @@
 
 #include "bumon.h"
 #include "FindProcess.h"
-#include "ActiveTcpConnections.h"
-#include "ActiveUdpConnections.h"
 #include "TrafficManager.h"
-#include "InternNet.h"
 #include "ConfigfileParser.h"
-#include "ip.h"
-
-std::list<InternNet*> interns;
-
-void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
+#include "Ip.h"
 
 FindProcess* findProcesses;
-ActiveTcpConnections *activeTcpConnections;
-ActiveUdpConnections *activeUdpConnections;
+Ip* ip;
 std::map<int, Connection*> allConnections;
 std::mutex allConnections_mutex;
 Watching* watching;
 TrafficManager *trafficManager;
-struct in_addr self_ip;
 Logfile* logfile;
 bool debug;
 std::string ssPath = "ss";
+std::string sendmailPath = "/usr/lib/sendmail -t";
 
 void signalHandler( int signum ) {
     if (SIGHUP == signum) {
@@ -174,8 +166,9 @@ int main(int argc, char *argv[])
             break;
     }
     
+    ConfigfileParser* config = NULL;
     if (NULL != configPath) {
-        ConfigfileParser* config = new ConfigfileParser(configPath);
+        config = new ConfigfileParser(configPath);
     
         std::map<std::string, std::string>::iterator configIter;
         if ((configIter = config->options.find("logfile")) != config->options.end()) {
@@ -201,6 +194,9 @@ int main(int argc, char *argv[])
         }
         if ((configIter = config->options.find("ssPath")) != config->options.end()) {
             ssPath = configIter->second;
+        }
+        if ((configIter = config->options.find("sendmailPath")) != config->options.end()) {
+            sendmailPath = configIter->second;
         }
         if ((configIter = config->options.find("warning_mail_sender")) != config->options.end()) {
             warning_mail_sender = configIter->second;
@@ -241,13 +237,12 @@ int main(int argc, char *argv[])
     }
     trafficManager = new TrafficManager();
     
-    activeTcpConnections = new ActiveTcpConnections();
-    activeUdpConnections = new ActiveUdpConnections();
+    ip = new Ip(config);
     
     signal(SIGHUP, signalHandler);
     
     /* now we can set our callback function */
-    pcap_loop(handle, -1, got_packet, NULL);
+    pcap_loop(handle, -1, Ip::got_packet, (u_char*) ip);
     
     pcap_close(handle);
     return(0);

@@ -17,12 +17,26 @@
 #ifndef CONFIGFILEPARSER_H
 #define CONFIGFILEPARSER_H
 
+#include <list>
 #include <string>
+#include <map>
+
+class IpAndMask {
+public:
+    IpAndMask(std::string ip, std::string mask);
+    std::string ip;
+    std::string mask;
+};
 
 class ConfigfileParser {
-    public:
-        ConfigfileParser(std::string configFile);
-        std::map<std::string, std::string> options;
+private:
+    bool handleIntern(std::string val);
+    bool handleSelf(std::string val);
+public:
+    ConfigfileParser(std::string configFile);
+    std::map<std::string, std::string> options;
+    std::list<IpAndMask> interns;
+    std::list<std::string> selfs;
 };
 
 #endif

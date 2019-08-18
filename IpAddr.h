@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef IP_H
-#define IP_H
+#ifndef IPADDR_H
+#define IPADDR_H
 
-void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
+#include <string>
+
+class IpAddr {
+public:
+    virtual std::string toString() const = 0;
+};
 
 #endif

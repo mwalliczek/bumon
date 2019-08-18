@@ -17,21 +17,17 @@
 #ifndef ACTIVETCPCONNECTIONS_H
 #define ACTIVETCPCONNECTIONS_H
 
-#include <string>
-#include <map>
-#include <mutex>
-
 #include "Connection.h"
 #include "TrafficManager.h"
 #include "ConnectionIdentifier.h"
+#include "ActiveStateConnections.h"
 
-class ActiveTcpConnections {
-    std::map<ConnectionIdentifier, int> map;
-    std::mutex map_mutex;
-    
-    public:
-        void handlePacket(struct in_addr ip_src, struct in_addr ip_dst, uint16_t ip_len, const u_char *packet, int size_ip);
-        void checkTimeout();
+template<typename IP>
+class ActiveTcpConnections : public ActiveStateConnections<IP> {
+public:
+    ActiveTcpConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs);
+    void handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, const u_char *packet, int size_ip);
+    void checkTimeout();
 };
 
 #endif

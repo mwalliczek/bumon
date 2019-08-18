@@ -170,10 +170,8 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
             message = "  Port " + std::to_string(dst_port) + " (" + std::string(protocolName(protocol)) + ")" + message;
             if (!intern) {
                 std::vector<HostWithBandwidth>* topHosts = mysql_connection->lookupTopHostsWithBandwidth((char*) statsbuff, dst_port, protocol, inbound);
-                std::vector<HostWithBandwidth>::iterator topHostsIter = topHosts->begin();
-                while (topHostsIter != topHosts->end()) {
-                    message += "    " + resolveIp(topHostsIter->host) + ": " + formatBandwidth(topHostsIter->bytes) + "\n";
-                    topHostsIter++;
+                for (auto& topHostsIter : (*topHosts)) {
+                    message += "    " + resolveIp(topHostsIter.host) + ": " + formatBandwidth(topHostsIter.bytes) + "\n";
                 }
                 delete topHosts;
             }
@@ -202,29 +200,28 @@ void Stats::insert(char *statsbuff, int dst_port, int protocol, bool intern, boo
 }
 
 void Stats::sendMail(std::map<std::string, std::string>* messages) {
-    std::map<std::string, std::string>::iterator messagesIter = messages->begin();
     if (NULL != sender && NULL != recipient) {
-        FILE *mailpipe = popen("/usr/lib/sendmail -t", "w");
+        FILE *mailpipe = popen(sendmailPath.c_str(), "w");
         if (mailpipe != NULL) {
             fprintf(mailpipe, "To: %s\n", recipient);
             fprintf(mailpipe, "From: %s\n", sender);
             fprintf(mailpipe, "Subject: Traffic-Warnung\n\n");
-            while (messagesIter != messages->end()) {
-                logfile->log(2, "%s: %s", messagesIter->first.substr(0, 19).c_str(), messagesIter->second.c_str());
-                fwrite(messagesIter->first.substr(0, 19).c_str(), 1, 19, mailpipe);
-                fwrite("\n", 1, 1, mailpipe);
-                fwrite(messagesIter->second.c_str(), 1, messagesIter->second.length(), mailpipe);
-                fwrite("\n", 1, 1, mailpipe);
-                messagesIter++;
+            for (auto& messagesIter : (*messages)) {
+                if (!messagesIter.second.empty()) {
+                    logfile->log(2, "%s: %s", messagesIter.first.substr(0, 19).c_str(), messagesIter.second.c_str());
+                    fwrite(messagesIter.first.substr(0, 19).c_str(), 1, 19, mailpipe);
+                    fwrite("\n", 1, 1, mailpipe);
+                    fwrite(messagesIter.second.c_str(), 1, messagesIter.second.length(), mailpipe);
+                    fwrite("\n", 1, 1, mailpipe);
+                }
             }
             pclose(mailpipe);
-         } else {
+        } else {
             logfile->log(3, "Failed to invoke sendmail");
-         }
+        }
      } else {
-        while (messagesIter != messages->end()) {
-            logfile->log(2, "%s: %s", messagesIter->first.substr(0, 19).c_str(), messagesIter->second.c_str());
-            messagesIter++;
+        for (auto& messagesIter : (*messages)) {
+            logfile->log(2, "%s: %s", messagesIter.first.substr(0, 19).c_str(), messagesIter.second.c_str());
         }
      }
 }

@@ -31,7 +31,7 @@ class Logfile {
         ~Logfile();
         void log(int logLevel, std::string message);
         void log(int logLevel, const char *format, ...);
-        bool checkLevel(int logLevel);
+        bool checkLevel(int logLevel) const;
         void hup();
         void flush();
 };

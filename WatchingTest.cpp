@@ -23,6 +23,7 @@
 #include "bumon.h"
 #include "Connection.h"
 #include "FindProcess.h"
+#include "ConnectionIdentifier.h"
 #include "ActiveTcpConnections.h"
 
 class WatchingTest : public CPPUNIT_NS::TestFixture
@@ -39,14 +40,11 @@ class WatchingTest : public CPPUNIT_NS::TestFixture
 
 CPPUNIT_TEST_SUITE_REGISTRATION( WatchingTest );
 
-std::map<ConnectionIdentifier, int> con_map;
-
 void WatchingTest::testAll() {
- struct in_addr test_src_addr, test_dst_addr;
- inet_pton(AF_INET, "10.31.1.100", &test_src_addr);
- inet_pton(AF_INET, "10.31.1.100", &self_ip);
- inet_pton(AF_INET, "10.69.1.1", &test_dst_addr);
- Connection* con = new Connection(test_src_addr, 50, test_dst_addr, 100, 1, "testProcess", &con_map, "");
+ ConfigfileParser* config = new ConfigfileParser("testConfigMock.conf");
+ ip = new Ip(config);
+
+ Connection* con = new Connection("10.69.1.1", 100, 1, "testProcess", false, false);
  
  std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
  (*traffic1)[con->id] = 100;
@@ -72,14 +70,14 @@ void WatchingTest::testAll() {
  delete con;
  delete traffic1;
  delete traffic2;
+ delete ip;
+ delete config;
 }
 
 void WatchingTest::testIntegration() {
- struct in_addr test_src_addr, test_dst_addr;
- inet_pton(AF_INET, "10.31.1.100", &test_src_addr);
- inet_pton(AF_INET, "10.31.1.100", &self_ip);
- inet_pton(AF_INET, "10.69.1.1", &test_dst_addr);
- Connection* con = new Connection(test_src_addr, 50, test_dst_addr, 80, IPPROTO_TCP, "testProcess", &con_map, "");
+ ConfigfileParser* config = new ConfigfileParser("testConfigMock.conf");
+ ip = new Ip(config);
+ Connection* con = new Connection("10.69.1.1", 80, IPPROTO_TCP, "testProcess", false, false);
  
  std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
  (*traffic1)[con->id] = 100;
@@ -108,5 +106,7 @@ void WatchingTest::testIntegration() {
  delete sut;
  delete traffic1;
  delete traffic2;
+ delete ip;
+ delete config;
 }
 

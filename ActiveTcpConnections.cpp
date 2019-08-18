@@ -121,23 +121,30 @@ struct sniff_tcp {
         tcp_seq th_seq;                 /* sequence number */
         tcp_seq th_ack;                 /* acknowledgement number */
         u_char  th_offx2;               /* data offset, rsvd */
-#define TH_OFF(th)      (((th)->th_offx2 & 0xf0) >> 4)
         u_char  th_flags;
-        #define TH_FIN  0x01
-        #define TH_SYN  0x02
-        #define TH_RST  0x04
-        #define TH_PUSH 0x08
-        #define TH_ACK  0x10
-        #define TH_URG  0x20
-        #define TH_ECE  0x40
-        #define TH_CWR  0x80
-        #define TH_FLAGS        (TH_FIN|TH_SYN|TH_RST|TH_ACK|TH_URG|TH_ECE|TH_CWR)
         u_short th_win;                 /* window */
         u_short th_sum;                 /* checksum */
         u_short th_urp;                 /* urgent pointer */
 };
 
-void ActiveTcpConnections::handlePacket(struct in_addr ip_src, struct in_addr ip_dst, uint16_t ip_len, const u_char *packet, int size_ip) {
+int calcOffset(u_char th_offx2) {
+	return ((th_offx2 & 0xf0) >> 4);
+}
+
+template<typename IP>
+ActiveTcpConnections<IP>::ActiveTcpConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs) :
+ActiveStateConnections<IP>(interns, selfs) { }
+
+template<typename IP>
+void debugLog(ConnectionIdentifier<IP> identifier, Connection* connection, const char* prefix) {
+    if (logfile->checkLevel(6)) {
+	logfile->log(6, "%s: %s = %d (%s)", prefix, identifier.toString().c_str(), connection->id, 
+		connection->process.c_str());
+    }
+}
+
+template<typename IP>
+void ActiveTcpConnections<IP>::handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, const u_char *packet, int size_ip) {
 	const struct sniff_tcp *tcp;            /* The TCP header */
 	int size_tcp;
 	
@@ -147,7 +154,7 @@ void ActiveTcpConnections::handlePacket(struct in_addr ip_src, struct in_addr ip
 	
 	/* define/compute tcp header offset */
 	tcp = (struct sniff_tcp*)packet;
-	size_tcp = TH_OFF(tcp)*4;
+	size_tcp = calcOffset(tcp->th_offx2)*4;
 	if (size_tcp < 20) {
 		fprintf(stderr, "   * Invalid TCP header length: %u bytes\n", size_tcp);
 		return;
@@ -157,111 +164,110 @@ void ActiveTcpConnections::handlePacket(struct in_addr ip_src, struct in_addr ip
 	int dport = ntohs(tcp->th_dport);
 	
 	if (logfile->checkLevel(10)) {
-	    std::string ip_src_str(inet_ntoa(ip_src));
-	    std::string ip_dst_str(inet_ntoa(ip_dst));
-	
-	    logfile->log(10, "%s:%d -> %s:%d flags=%d len=%d", ip_src_str.c_str(), sport, ip_dst_str.c_str(), dport, tcp->th_flags, ip_len);
+	    logfile->log(10, "%s:%d -> %s:%d flags=%d len=%d", ip_src.toString().c_str(), sport, 
+		    ip_dst.toString().c_str(), dport, tcp->th_flags, ip_len);
 	}
 	
 	Connection *foundConnection = NULL;
-	map_mutex.lock();
+	this->map_mutex.lock();
 	allConnections_mutex.lock();
-	std::map<ConnectionIdentifier, int>::iterator iter;
+	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter;
 	if ((tcp->th_flags & 18) == 2) {
-	    std::string process;
-	    if (ip_dst.s_addr == self_ip.s_addr) {
-	        process = findProcesses->findListenTcpProcess(dport);
-            } else if (ip_src.s_addr == self_ip.s_addr) {
-                std::string ip_dst_str(inet_ntoa(ip_dst));
-                process = findProcesses->findActiveTcpProcess(sport, ip_dst_str, dport);
-            }
-	    foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, process, &map, "new tcp connection");
-        } else if ((tcp->th_flags & 18) == 18 && ((iter = map.find(ConnectionIdentifier(ip_dst, dport, ip_src, sport))) != map.end())) {
-	    foundConnection = allConnections[iter->second];
-	    if (logfile->checkLevel(6)) {
-	        logfile->log(6, "ack connection: %s = %d (%s)", foundConnection->getIdentifier().c_str(), foundConnection->id, foundConnection->process.c_str());
+            foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "new tcp connection");
+            if (foundConnection->inbound) {
+	        foundConnection->process = findProcesses->findListenTcpProcess(dport);
+	    } else {
+	    	foundConnection->process = findProcesses->findActiveTcpProcess(sport, ip_dst.toString(), dport);
 	    }
+        } else if ((tcp->th_flags & 18) == 18 && 
+        	((iter = this->map.find(ConnectionIdentifier<IP>(ip_dst, dport, ip_src, sport))) != this->map.end())) {
+	    foundConnection = allConnections[iter->second];
+	    debugLog(iter->first, foundConnection, "ack connection");
 	    foundConnection->ack = true;
         } else if ((tcp->th_flags & 1) == 1) {
-	    if ((iter = map.find(ConnectionIdentifier(ip_src, sport, ip_dst, dport))) != map.end()) {
+	    if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_src, sport, ip_dst, dport))) != this->map.end()) {
 	    	foundConnection = allConnections[iter->second];
-	    	if (0 == foundConnection->end && logfile->checkLevel(6)) {
-		    logfile->log(6, "stop connection: %s = %d (%s)", foundConnection->getIdentifier().c_str(), foundConnection->id, foundConnection->process.c_str());
+	    	if (0 == foundConnection->end) {
+		    debugLog(iter->first, foundConnection, "stop connection");
 		}
-	    } else if ((iter = map.find(ConnectionIdentifier(ip_dst, dport, ip_src, sport))) != map.end()) {
+	    } else if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_dst, dport, ip_src, sport))) != this->map.end()) {
 	    	foundConnection = allConnections[iter->second];
-	    	if (0 == foundConnection->end && logfile->checkLevel(6)) {
-	    	    logfile->log(6, "stop connection: %s = %d (%s)", foundConnection->getIdentifier().c_str(), foundConnection->id, foundConnection->process.c_str());
+	    	if (0 == foundConnection->end) {
+		    debugLog(iter->first, foundConnection, "stop connection");
 	    	}
 	    }
 	    if (foundConnection) {
 	    	foundConnection->stop();
 	    }
         } else {
-	    if ((iter = map.find(ConnectionIdentifier(ip_src, sport, ip_dst, dport))) != map.end()) {
+	    if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_src, sport, ip_dst, dport))) != this->map.end()) {
 	    	foundConnection = allConnections[iter->second];
-	    } else if ((iter = map.find(ConnectionIdentifier(ip_dst, dport, ip_src, sport))) != map.end()) {
+	    } else if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_dst, dport, ip_src, sport))) != this->map.end()) {
 	        foundConnection = allConnections[iter->second];
 	        if (foundConnection->alreadyRunning && !foundConnection->ack) {
 		  foundConnection->ack = true;
 	        }
 	    } else {
         	std::string process;
-                if (ip_dst.s_addr == self_ip.s_addr && !(process = findProcesses->findListenTcpProcess(dport)).empty()) {
-                    foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, process, &map, "already running connection");
-                } else if (ip_src.s_addr == self_ip.s_addr && !(process = findProcesses->findListenTcpProcess(sport)).empty()) {
-                    foundConnection = new Connection(ip_dst, dport, ip_src, sport, IPPROTO_TCP, process, &map, "already running connection");
-                } else if (ip_dst.s_addr == self_ip.s_addr && dport < 1024) {
-                    foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "", &map, "already running connection");
-                } else if (ip_src.s_addr == self_ip.s_addr && sport < 1024) {
-                    foundConnection = new Connection(ip_dst, dport, ip_src, sport, IPPROTO_TCP, "", &map, "already running connection");
+                if (this->isSelf(ip_dst) && !(process = findProcesses->findListenTcpProcess(dport)).empty()) {
+                    foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "already running connection");
+                    foundConnection->process = process;
+                } else if (this->isSelf(ip_src) && !(process = findProcesses->findListenTcpProcess(sport)).empty()) {
+                    foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_TCP, "already running connection");
+                    foundConnection->process = process;
+                } else if (this->isSelf(ip_dst) && dport < 1024) {
+                    foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "already running connection");
+                } else if (this->isSelf(ip_src) && sport < 1024) {
+                    foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_TCP, "already running connection");
                 } else {
-                    foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "", &map, "already running connection");
+                    foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "already running connection");
                 }
                 foundConnection->alreadyRunning = true;
 	    }
         }
-        map_mutex.unlock();
+        this->map_mutex.unlock();
         allConnections_mutex.unlock();
 	if (foundConnection) {
-		foundConnection->handleData(ip_len, &packet[size_tcp], ip_len - (size_ip + size_tcp));
+	    foundConnection->handleData(ip_len, &packet[size_tcp], ip_len - (size_ip + size_tcp));
         }
 }
 
-void ActiveTcpConnections::checkTimeout() {
-	map_mutex.lock();
-	std::map<ConnectionIdentifier, int>::iterator iter = map.begin();
+template<typename IP>
+void ActiveTcpConnections<IP>::checkTimeout() {
+	this->map_mutex.lock();
+	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter = this->map.begin();
 	time_t current;
 	time(&current);
-	while (iter != map.end()) {
+	while (iter != this->map.end()) {
 		allConnections_mutex.lock();
 		Connection* connection = allConnections[iter->second];
 		allConnections_mutex.unlock();
 		if (connection->ack == false && connection->end == 0 && difftime(current, connection->begin) > 30) {
 			if (logfile->checkLevel(5)) {
-			    logfile->log(5, "timeout aborted connection: %s (%s)", connection->getIdentifier().c_str(), 
+			    logfile->log(5, "timeout aborted connection: %s (%s)", iter->first.toString().c_str(), 
 			    		connection->process.c_str());
 			}
 				
-        	        if (connection->dst_ip.s_addr == self_ip.s_addr && connection->alreadyRunning == false && logfile->checkLevel(2)) {
-			    std::string ip_src_str(inet_ntoa(connection->src_ip));
-			    logfile->log(2, "aborted connection from %s (%s)", ip_src_str.c_str(), connection->getIdentifier().c_str());
+        	        if (connection->inbound && connection->alreadyRunning == false && logfile->checkLevel(2)) {
+			    logfile->log(2, "aborted connection from %s (%s)", connection->ip.c_str(), iter->first.toString().c_str());
 		        }
-        	        iter = map.erase(iter);
+        	        iter = this->map.erase(iter);
         	        connection->stop();
         	        continue;
 		}
 		if (connection->end != 0 && difftime(current, connection->end) > 30) {
-        	        iter = map.erase(iter);
+        	        iter = this->map.erase(iter);
         	        continue;
 		}
 		if (difftime(current, connection->lastAct) > 3600) {
-        	        iter = map.erase(iter);
+        	        iter = this->map.erase(iter);
         	        connection->stop();
         	        continue;
 		}
 		iter++;
 	}
-	map_mutex.unlock();
+	this->map_mutex.unlock();
 	logfile->flush();
 }
+
+template class ActiveTcpConnections<Ipv4Addr>;

@@ -14,26 +14,17 @@
  * limitations under the License.
  */
 
-#ifndef NETMONITOR_H
-#define NETMONITOR_H
+#include "IpMock.h"
 
-#include <mutex>
+IpMock::IpMock(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, 
+		ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections) : Ip(activev4TcpConnections,
+		activev4UdpConnections, NULL) { }
 
-#include "Logfile.h"
-#include "FindProcess.h"
-#include "TrafficManager.h"
-#include "Connection.h"
-#include "Ip.h"
-
-extern FindProcess* findProcesses;
-extern std::map<int, Connection*> allConnections;
-extern std::mutex allConnections_mutex;
-extern Watching* watching;
-extern TrafficManager *trafficManager;
-extern Logfile* logfile;
-extern Ip* ip;
-extern std::string ssPath;
-extern std::string sendmailPath;
-extern bool debug;
-
-#endif
+void IpMock::checkTimeout() {
+	if (NULL != activev4TcpConnections) {
+		activev4TcpConnections->checkTimeout();
+	}
+	if (NULL != activev4UdpConnections) {
+		activev4UdpConnections->checkTimeout();
+	}
+}

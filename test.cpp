@@ -25,7 +25,9 @@
 #include <cppunit/TestRunner.h>
 #include <cppunit/BriefTestProgressListener.h>
 
+#include "bumon.h"
 #include "WatchingMock.h"
+#include "Ipv4Addr.h"
 #include "ActiveTcpConnections.h"
 #include "ActiveUdpConnections.h"
 #include "FindProcess.h"
@@ -33,24 +35,20 @@
 #include "Logfile.h"
 
 Watching* watching;
-ActiveTcpConnections *activeTcpConnections;
-ActiveUdpConnections *activeUdpConnections;
 FindProcess* findProcesses;
+Ip* ip;
 TrafficManager *trafficManager;
-struct in_addr self_ip;
 std::map<int, Connection*> allConnections;
 std::mutex allConnections_mutex;
-std::list<InternNet*> interns { new InternNet("10.69.0.0", "255.255.0.0"), new InternNet("10.133.96.0", "255.255.224.0") };
 Logfile* logfile;
 bool debug = true;
 std::string ssPath = "./ssMock";
+std::string sendmailPath = "echo > /dev/null";
 
 int main (int argc, char* argv[])
 {
     logfile = new Logfile("", 11);
     watching = new WatchingMock();
-    activeTcpConnections = new ActiveTcpConnections();
-    activeUdpConnections = new ActiveUdpConnections();
     findProcesses = new FindProcess();
     trafficManager = new TrafficManager();
     
@@ -80,15 +78,9 @@ int main (int argc, char* argv[])
     xmlOut.write();
 
     delete watching;
-    delete activeTcpConnections;
-    delete activeUdpConnections;
     delete findProcesses;
     delete trafficManager;
     delete logfile;
-    
-    for (std::list<InternNet*>::iterator i=interns.begin(); i!=interns.end(); i++)
-        delete *i;
-    interns.clear();
     
     mysql_library_end();
 

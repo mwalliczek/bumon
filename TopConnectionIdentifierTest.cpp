@@ -18,32 +18,27 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <map>
-#include <list>
+#include "TopConnectionIdentifier.h"
 
-#include "bumon.h"
-#include "ConfigfileParser.h"
-#include "InternNet.h"
-
-class ConfigfileParserTest : public CPPUNIT_NS::TestFixture
+class TopConnectionIdentifierTest : public CPPUNIT_NS::TestFixture
 {
- CPPUNIT_TEST_SUITE( ConfigfileParserTest );
- CPPUNIT_TEST( testAll );
+ CPPUNIT_TEST_SUITE( TopConnectionIdentifierTest );
+ CPPUNIT_TEST( test );
  CPPUNIT_TEST_SUITE_END();
 
  public:
-  void testAll();
+  void test();
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( ConfigfileParserTest );
+CPPUNIT_TEST_SUITE_REGISTRATION( TopConnectionIdentifierTest );
 
-void ConfigfileParserTest::testAll() {
-
- ConfigfileParser* underTest = new ConfigfileParser("testConfig.conf");
- CPPUNIT_ASSERT(underTest->options["device"] == "eth0");
- CPPUNIT_ASSERT(underTest->interns.size() == 2);
- CPPUNIT_ASSERT(underTest->selfs.size() == 1);
- CPPUNIT_ASSERT(underTest->selfs.front() == "10.31.1.100");
- delete underTest;
+void TopConnectionIdentifierTest::test() {
+    Connection *aCon = new Connection("10.31.1.100", 80, 6, "", true, true);
+    TopConnectionIdentifier a = TopConnectionIdentifier(aCon);
+    Connection *bCon = new Connection("10.69.1.1", 80, 6, "", true, true);
+    TopConnectionIdentifier b = TopConnectionIdentifier(bCon);
+    CPPUNIT_ASSERT(a<b);
+    CPPUNIT_ASSERT(!(b<a));
+    delete aCon;
+    delete bCon;
 }
-

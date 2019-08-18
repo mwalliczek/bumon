@@ -19,6 +19,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "InternNet.h"
+#include "Ipv4Addr.h"
 
 class InternNetTest : public CPPUNIT_NS::TestFixture
 {
@@ -35,7 +36,7 @@ class InternNetTest : public CPPUNIT_NS::TestFixture
 CPPUNIT_TEST_SUITE_REGISTRATION( InternNetTest );
 
 void InternNetTest::testmatches() {
- InternNet *test = new InternNet("10.69.0.0", "255.255.0.0");
+ InternNet<Ipv4Addr> *test = new InternNet<Ipv4Addr>((char *) "10.69.0.0", (char *) "255.255.0.0");
  CPPUNIT_ASSERT(test->valid == true);
  struct in_addr test_addr;
  inet_pton(AF_INET, "10.69.1.1", &test_addr);
@@ -44,7 +45,7 @@ void InternNetTest::testmatches() {
 }
 
 void InternNetTest::testmatchesNot() {
- InternNet *test = new InternNet("10.69.0.0", "255.255.0.0");
+ InternNet<Ipv4Addr> *test = new InternNet<Ipv4Addr>((char *) "10.69.0.0", (char *) "255.255.0.0");
  struct in_addr test_addr;
  inet_pton(AF_INET, "10.70.1.1", &test_addr);
  CPPUNIT_ASSERT(test->match(test_addr) == false);

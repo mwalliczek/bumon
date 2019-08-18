@@ -14,48 +14,45 @@
  * limitations under the License.
  */
 
-#ifndef CONNECTIONIDENTIFIER_H
-#define CONNECTIONIDENTIFIER_H
+#include "TopConnectionIdentifier.h"
 
-#include <string>
+TopConnectionIdentifier::TopConnectionIdentifier(Connection* c):
+    intern(c->intern), inbound(c->inbound), ip(c->ip), dst_port(c->dst_port), protocol(c->protocol) { }
 
-template<typename IP>
-class ConnectionIdentifier {
-    IP ip_src;
-    int sport;
-    IP ip_dst;
-    int dport;
-
-public:
-    ConnectionIdentifier(IP ip_src, int sport, IP ip_dst, int dport);
-    std::string toString() const;
-    template<typename IP_> friend bool operator<(const ConnectionIdentifier<IP_> &c1, const ConnectionIdentifier<IP_> &c2);
-};
-
-template<typename IP>
-bool operator<(const ConnectionIdentifier<IP> &c1, const ConnectionIdentifier<IP> &c2) {
-    if (c1.ip_src < c2.ip_src) {
+bool operator<(const TopConnectionIdentifier &c1, const TopConnectionIdentifier &c2) {
+    if (c1.intern && !c2.intern) {
         return true;
     }
-    if (c1.ip_src > c2.ip_src) {
+    if (!c1.intern && c2.intern) {
         return false;
     }
-    if (c1.sport < c2.sport) {
+    if (c1.inbound && !c2.inbound) {
         return true;
     }
-    if (c1.sport > c2.sport) {
+    if (!c1.inbound && c2.inbound) {
         return false;
     }
-    if (c1.ip_dst < c2.ip_dst) {
+    if (c1.dst_port < c2.dst_port) {
         return true;
     }
-    if (c1.ip_dst > c2.ip_dst) {
+    if (c1.dst_port > c2.dst_port) {
         return false;
     }
-    if (c1.dport < c2.dport) {
+    if (c1.protocol < c2.protocol) {
+        return true;
+    }
+    if (c1.protocol > c2.protocol) {
+        return false;
+    }
+    if (c1.ip < c2.ip) {
+        return true;
+    }
+    if (c1.ip > c2.ip) {
+        return false;
+    }
+    if (c1.text < c2.text) {
         return true;
     }
     return false;
+    
 }
-
-#endif

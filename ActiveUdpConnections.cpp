@@ -29,7 +29,12 @@ struct sniff_udp {
         u_short th_sum;
 };
 
-void ActiveUdpConnections::handlePacket(struct in_addr ip_src, struct in_addr ip_dst, uint16_t ip_len, const u_char *packet) {
+template<typename IP>
+ActiveUdpConnections<IP>::ActiveUdpConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs) :
+ActiveStateConnections<IP>(interns, selfs) { }
+
+template<typename IP>
+void ActiveUdpConnections<IP>::handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, const u_char *packet) {
 	const struct sniff_udp *udp;            /* The TCP header */
 	
 	/*
@@ -43,35 +48,34 @@ void ActiveUdpConnections::handlePacket(struct in_addr ip_src, struct in_addr ip
 	int dport = ntohs(udp->th_dport);
 	
 	if (logfile->checkLevel(10)) {
-	    std::string ip_src_str(inet_ntoa(ip_src));
-	    std::string ip_dst_str(inet_ntoa(ip_dst));
-
-	    logfile->log(10, "%s:%d -> %s:%d len=%d", ip_src_str.c_str(), sport, ip_dst_str.c_str(), dport, ip_len);
+	    logfile->log(10, "%s:%d -> %s:%d len=%d", ip_src.toString().c_str(), sport, ip_dst.toString().c_str(), dport, ip_len);
 	}
 	
 	Connection *foundConnection = NULL;
-	map_mutex.lock();
+	this->map_mutex.lock();
 	allConnections_mutex.lock();
-	std::map<ConnectionIdentifier, int>::iterator iter;
-	if ((iter = map.find(ConnectionIdentifier(ip_src, sport, ip_dst, dport))) != map.end()) {
+	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter;
+	if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_src, sport, ip_dst, dport))) != this->map.end()) {
 		foundConnection = allConnections[iter->second];
-	} else if ((iter = map.find(ConnectionIdentifier(ip_dst, dport, ip_src, sport))) != map.end()) {
+	} else if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_dst, dport, ip_src, sport))) != this->map.end()) {
 	    	foundConnection = allConnections[iter->second];
 	} else {
 		std::string process;
-		if (ip_dst.s_addr == self_ip.s_addr && !(process = findProcesses->findListenUdpProcess(dport)).empty()) {
-	            foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, process, &map, "new udp connection");
-		} else if (ip_src.s_addr == self_ip.s_addr && !(process = findProcesses->findListenUdpProcess(sport)).empty()) {
-	            foundConnection = new Connection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, process, &map, "new udp connection");
-		} else if (ip_dst.s_addr == self_ip.s_addr && dport < 1024) {
-	            foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "", &map, "new udp connection");
-		} else if (ip_src.s_addr == self_ip.s_addr && sport < 1024) {
-	            foundConnection = new Connection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "", &map, "new udp connection");
+		if (this->isSelf(ip_dst) && !(process = findProcesses->findListenUdpProcess(dport)).empty()) {
+	            foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
+	            foundConnection->process = process;
+		} else if (this->isSelf(ip_src) && !(process = findProcesses->findListenUdpProcess(sport)).empty()) {
+	            foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
+	            foundConnection->process = process;
+		} else if (this->isSelf(ip_dst) && dport < 1024) {
+	            foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
+		} else if (this->isSelf(ip_src) && sport < 1024) {
+	            foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
 		} else {
-	            foundConnection = new Connection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "", &map, "new udp connection");
+	            foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
 		}
 	}
-	map_mutex.unlock();
+	this->map_mutex.unlock();
 	allConnections_mutex.unlock();
 	if (foundConnection) {
 		time(&foundConnection->lastAct);
@@ -79,21 +83,24 @@ void ActiveUdpConnections::handlePacket(struct in_addr ip_src, struct in_addr ip
         }
 }
 
-void ActiveUdpConnections::checkTimeout() {
-	map_mutex.lock();
-	std::map<ConnectionIdentifier, int>::iterator iter = map.begin();
+template<typename IP>
+void ActiveUdpConnections<IP>::checkTimeout() {
+	this->map_mutex.lock();
+	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter = this->map.begin();
 	time_t current;
 	time(&current);
-	while (iter != map.end()) {
+	while (iter != this->map.end()) {
 		allConnections_mutex.lock();
 		Connection* connection = allConnections[iter->second];
 		allConnections_mutex.unlock();
 		if (difftime(current, connection->lastAct) > 600) {
-        	        iter = map.erase(iter);
+        	        iter = this->map.erase(iter);
         	        connection->stop();
         	        continue;
 		}
 		iter++;
 	}
-	map_mutex.unlock();
+	this->map_mutex.unlock();
 }
+
+template class ActiveUdpConnections<Ipv4Addr>;

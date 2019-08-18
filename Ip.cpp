@@ -16,6 +16,8 @@
 
 #include "bumon.h"
 
+#include "Ip.h"
+
 /* ethernet headers are always exactly 14 bytes [1] */
 #define SIZE_ETHERNET 14
 
@@ -38,12 +40,39 @@ struct sniff_ip {
 #define IP_HL(ip)               (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)                (((ip)->ip_vhl) >> 4)
 
+Ip::Ip(ConfigfileParser* config) {
+	std::list<InternNet<Ipv4Addr>> interns;
+	std::list<Ipv4Addr> selfs;
+	if (NULL != config) {
+		for (auto intern : config->interns) {
+			interns.push_back(InternNet<Ipv4Addr>(intern.ip, intern.mask));
+		}
+		for (auto self : config->selfs) {
+			selfs.push_back(Ipv4Addr(self));
+		}
+	}
+	activev4TcpConnections = new ActiveTcpConnections<Ipv4Addr>(interns, selfs);
+	activev4UdpConnections = new ActiveUdpConnections<Ipv4Addr>(interns, selfs);
+	other = new ActiveConnections<Ipv4Addr>(interns, selfs);
+}
+
+Ip::Ip(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections,
+            ActiveConnections<Ipv4Addr> *other): activev4TcpConnections(activev4TcpConnections),
+            activev4UdpConnections(activev4UdpConnections), other(other) { }
+
+Ip::~Ip() {
+	delete activev4TcpConnections;
+	delete activev4UdpConnections;
+	delete other;
+}
+
 /*
  * dissect/print packet
  */
 void
-got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
+Ip::got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 {
+	Ip* self = (Ip*) args;
 
 	/* declare pointers to packet headers */
 	const struct sniff_ip *ip;              /* The IP header */
@@ -61,19 +90,21 @@ got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 	/* determine protocol */	
 	switch(ip->ip_p) {
 		case IPPROTO_TCP:
-			activeTcpConnections->handlePacket(ip->ip_src, ip->ip_dst, ntohs(ip->ip_len), &packet[SIZE_ETHERNET + size_ip], size_ip);
+			self->activev4TcpConnections->handlePacket(ip->ip_src, ip->ip_dst, ntohs(ip->ip_len), &packet[SIZE_ETHERNET + size_ip], size_ip);
 			break;
 		case IPPROTO_UDP:
-			activeUdpConnections->handlePacket(ip->ip_src, ip->ip_dst, ntohs(ip->ip_len), &packet[SIZE_ETHERNET + size_ip]);
+			self->activev4UdpConnections->handlePacket(ip->ip_src, ip->ip_dst, ntohs(ip->ip_len), &packet[SIZE_ETHERNET + size_ip]);
 			break;
 		default:
 			logfile->log(2, "   Protocol: unknown (%d)", ip->ip_p);
-			Connection *connection = new Connection(ip->ip_src, ip->ip_dst, ip->ip_p);
-			connection->handleData(ntohs(ip->ip_len));
-			connection->stop();
+			self->other->handlePacket(ip->ip_src, ip->ip_dst, ntohs(ip->ip_len), ip->ip_p);
 			return;
 	}
 	
 	return;
 }
 
+void Ip::checkTimeout() {
+	activev4TcpConnections->checkTimeout();
+	activev4UdpConnections->checkTimeout();
+}

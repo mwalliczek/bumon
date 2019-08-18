@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <bits/stdc++.h>
 #include <string>
 #include <ctime>
@@ -23,19 +21,15 @@
 #include <regex>
 #include <random>
 
-#include "InternNet.h"
 #include "Connection.h"
-#include "ConnectionIdentifier.h"
 #include "bumon.h"
 #include "tls.h"
-
-extern std::list<InternNet*> interns;
 
 static std::default_random_engine generator;
 static std::uniform_int_distribution<int> distribution(INT_MIN, INT_MAX);
 
-Connection::Connection(struct in_addr src_ip, struct in_addr dst_ip, u_char protocol):
-	src_ip(src_ip), dst_ip(dst_ip), protocol(protocol) {
+Connection::Connection(std::string ip, u_char protocol, bool inbound, bool intern):
+	ip(ip), protocol(protocol), inbound(inbound), intern(intern) {
     time(&begin);
     lastAct = 0;
     end = 0;
@@ -43,29 +37,13 @@ Connection::Connection(struct in_addr src_ip, struct in_addr dst_ip, u_char prot
     ack = false;
     alreadyRunning = false;
     payload = false;
-    
-    intern = false;
-    for(const auto& internIter : interns) {
-        if (internIter->match(src_ip) || internIter->match(dst_ip)) {
-            intern = true;
-            break;
-        }
-    }
     allConnections[id] = this;
 }
 
-Connection::Connection(struct in_addr src_ip, u_short src_port, struct in_addr dst_ip, u_short dst_port, 
-	u_char protocol, std::string process, std::map<ConnectionIdentifier, int>* map, const char* logMessage):
-	Connection(src_ip, dst_ip, protocol) {
-    this->src_port = src_port;
+Connection::Connection(std::string ip, u_short dst_port, u_char protocol, std::string process, bool inbound, 
+	bool intern): Connection(ip, protocol, inbound, intern) {
     this->dst_port = dst_port;
     this->process = process;
-    
-    if (logfile->checkLevel(6)) {
-	logfile->log(6, "%s: %s = %d (%s)", logMessage, getIdentifier().c_str(), id, process.c_str());
-    }
-    ConnectionIdentifier identifier = ConnectionIdentifier(src_ip, src_port, dst_ip, dst_port);
-    (*map)[identifier] = id;
 }
 
 /*
@@ -167,16 +145,6 @@ return;
 }
 
 static std::regex http("\\r\\nHost: (.*)\\r\\n", std::regex_constants::ECMAScript);
-
-std::string Connection::getIdentifier() {
-    if (identifier.empty()) {
-    	std::stringstream result;
-   	result << inet_ntoa(src_ip) << ":" << src_port;
-   	result << " > " << inet_ntoa(dst_ip) << ":" << dst_port;
-   	identifier = result.str();
-    }
-    return identifier;
-}
 
 void Connection::handleData(int ip_len) {
     time(&lastAct);

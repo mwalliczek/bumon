@@ -14,31 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef INTERN_NET_H
-#define INTERN_NET_H
+#ifndef IPV4ADDR_H
+#define IPV4ADDR_H
 
+#include <arpa/inet.h>
 #include <netinet/in.h>
 
-template<typename IP>
-class InternNet {
-    IP ip, mask;
+#include "IpAddr.h"
+
+class Ipv4Addr : public IpAddr {
+    struct in_addr ip;
+public:
+    Ipv4Addr(struct in_addr ip);
+    Ipv4Addr(std::string ip);
+    std::string toString() const;
+    bool empty() const;
     
-    public:
-        InternNet(std::string ip, std::string mask);
-        bool match(IP ip) const;
-        bool valid;
+    friend bool operator== (const Ipv4Addr &a, const Ipv4Addr &b);
+    friend bool operator!= (const Ipv4Addr &a, const Ipv4Addr &b);
+    friend bool operator< (const Ipv4Addr &a, const Ipv4Addr &b);
+    friend bool operator> (const Ipv4Addr &a, const Ipv4Addr &b);
+    friend Ipv4Addr& operator& (Ipv4Addr &a, const Ipv4Addr &b);
 };
-
-template<typename IP>
-InternNet<IP>::InternNet(std::string ip, std::string mask): ip(IP(ip)), mask(IP(mask)) {
-    valid = true;
-    valid &= !this->ip.empty();
-    valid &= !this->mask.empty();
-}
-
-template<typename IP>
-bool InternNet<IP>::match(IP ip) const {
-    return (ip & this->mask) == this->ip;
-}
 
 #endif

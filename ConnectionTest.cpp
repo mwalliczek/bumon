@@ -18,59 +18,22 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "bumon.h"
 #include "Connection.h"
+
+#include "bumon.h"
 
 class ConnectionTest : public CPPUNIT_NS::TestFixture
 {
  CPPUNIT_TEST_SUITE( ConnectionTest );
- CPPUNIT_TEST( testIntern );
- CPPUNIT_TEST( testExtern );
  CPPUNIT_TEST( testHandleData );
  CPPUNIT_TEST_SUITE_END();
 
  public:
-  void testIntern();
-  void testExtern();
   void testHandleData();
 };
 
-std::map<ConnectionIdentifier, int> connMap;
-
 CPPUNIT_TEST_SUITE_REGISTRATION( ConnectionTest );
 
-void ConnectionTest::testIntern() {
- struct in_addr test_src_addr, test_dst_addr;
- inet_pton(AF_INET, "10.69.1.1", &test_src_addr);
- inet_pton(AF_INET, "10.31.1.100", &test_dst_addr);
- Connection *test = new Connection(test_src_addr, 50, test_dst_addr, 50, 1, "", &connMap, "");
- CPPUNIT_ASSERT(test->intern == true);
- delete test;
-
- inet_pton(AF_INET, "10.69.63.180", &test_src_addr);
- test = new Connection(test_src_addr, 50, test_dst_addr, 50, 1, "", &connMap, "");
- CPPUNIT_ASSERT(test->intern == true);
- delete test;
-
- inet_pton(AF_INET, "10.31.1.100", &test_src_addr);
- inet_pton(AF_INET, "10.133.100.100", &test_dst_addr);
- test = new Connection(test_src_addr, 50, test_dst_addr, 50, 1, "", &connMap, "");
- CPPUNIT_ASSERT(test->intern == true);
- delete test;
- 
- allConnections.clear();
-}
-
-void ConnectionTest::testExtern() {
- struct in_addr test_src_addr, test_dst_addr;
- inet_pton(AF_INET, "10.50.1.1", &test_src_addr);
- inet_pton(AF_INET, "10.31.1.100", &test_dst_addr);
- Connection *test = new Connection(test_src_addr, 50, test_dst_addr, 50, 1, "", &connMap, "");
- CPPUNIT_ASSERT(test->intern == false);
- delete test;
-
- allConnections.clear();
-}
 
 // taken from https://github.com/dlundquist/sniproxy/blob/master/tests/tls_test.c
 const unsigned char good_data_1[] = {
@@ -125,17 +88,13 @@ const unsigned char good_data_1[] = {
 #define TESTSTRING "GET / HTTP/1.1\r\nUser-Agent: check_http/v2.2 (monitoring-plugins 2.2)\r\nConnection: close\r\nHost: test.example.com\r\n\r\n"
 
 void ConnectionTest::testHandleData() {
- struct in_addr test_src_addr, test_dst_addr;
- inet_pton(AF_INET, "10.50.1.1", &test_src_addr);
- inet_pton(AF_INET, "10.31.1.100", &test_dst_addr);
- Connection *test = new Connection(test_src_addr, 50, test_dst_addr, 80, 1, "", &connMap, "");
+ Connection *test = new Connection("10.50.1.1", 80, 6, "", true, true);
  test->handleData(160, (const u_char*) TESTSTRING, sizeof(TESTSTRING));
  CPPUNIT_ASSERT(test->content == "test.example.com");
  delete test;
- test = new Connection(test_src_addr, 50, test_dst_addr, 443, 1, "", &connMap, "");
+ test = new Connection("10.50.1.1", 443, 6, "", true, true);
  test->handleData(160, good_data_1, sizeof(good_data_1));
  CPPUNIT_ASSERT(test->content == "localhost");
  delete test;
- 
  allConnections.clear();
 }

@@ -26,9 +26,9 @@ class FindProcess {
     
     public:
         void init();
-        std::string findListenTcpProcess(int port);
-        std::string findListenUdpProcess(int port);
-        std::string findActiveTcpProcess(int sport, std::string dst_ip, int dport);
+        std::string findListenTcpProcess(int port) const;
+        std::string findListenUdpProcess(int port) const;
+        std::string findActiveTcpProcess(int sport, std::string dst_ip, int dport) const;
 };
 
 #endif

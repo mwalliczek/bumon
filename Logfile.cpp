@@ -47,7 +47,7 @@ void getTime() {
     strftime(buff, 20, "%b %d %H:%M:%S", localtime(&current));
 }
 
-bool Logfile::checkLevel(int logLevel) {
+bool Logfile::checkLevel(int logLevel) const {
     return (logLevel <= this->logLevel);
 }
 

@@ -104,21 +104,21 @@ void FindProcess::init() {
     this->udpListen = parseSS(" -lnpu");
 }
 
-std::string FindProcess::findListenTcpProcess(int port) {
-    std::map<u_short, std::string>::iterator it = tcpListen.find(port);
+std::string FindProcess::findListenTcpProcess(int port) const {
+    const auto it = tcpListen.find(port);
     if (it != tcpListen.end())
         return it->second;
     return "";
 }
 
-std::string FindProcess::findListenUdpProcess(int port) {
-    std::map<u_short, std::string>::iterator it = udpListen.find(port);
+std::string FindProcess::findListenUdpProcess(int port) const {
+    const auto it = udpListen.find(port);
     if (it != udpListen.end())
         return it->second;
     return "";
 }
 
-std::string FindProcess::findActiveTcpProcess(int sport, std::string dst_ip, int dport) {
+std::string FindProcess::findActiveTcpProcess(int sport, std::string dst_ip, int dport) const {
     std::string result;
     std::stringstream cmd;
     cmd << ssPath << " -anpt sport = :" << sport << " and dst " << dst_ip << ":" << dport;  

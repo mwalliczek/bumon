@@ -17,35 +17,32 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
-#include <netinet/in.h>
 #include <string>
 #include <ctime>
-
-#include "ConnectionIdentifier.h"
 
 class Connection {
     bool payload;
     std::string identifier;
     
     public:
-        Connection(struct in_addr, u_short, struct in_addr, u_short, u_char, std::string, std::map<ConnectionIdentifier, int>*, const char*);
-        Connection(struct in_addr, struct in_addr, u_char);
+        Connection(std::string ip, u_short dst_port, u_char protocol, std::string process, bool inbound, bool intern);
+        Connection(std::string ip, u_char protocol, bool inbound, bool intern);
         void stop();
         void handleData(int len);
         void handleData(int len, const u_char *payload, int size_payload);
         int id;
-        bool intern;
         bool ack;
         time_t lastAct;
         time_t end;
         bool alreadyRunning;
         std::string content;
-        struct in_addr src_ip,dst_ip;
-        u_short src_port,dst_port;
+        std::string ip;
+        u_short dst_port;
         time_t begin;
         u_char protocol;
         std::string process;
-        std::string getIdentifier();
+        bool inbound;
+        bool intern;
 };
 
 #endif

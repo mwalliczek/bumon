@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-#include <arpa/inet.h>
-
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "ConnectionIdentifier.h"
+#include "Ipv4Addr.h"
 
 class ConnectionIdentifierTest : public CPPUNIT_NS::TestFixture
 {
@@ -33,16 +32,13 @@ class ConnectionIdentifierTest : public CPPUNIT_NS::TestFixture
 CPPUNIT_TEST_SUITE_REGISTRATION( ConnectionIdentifierTest );
 
 void ConnectionIdentifierTest::test() {
-    struct in_addr test_src_addr, test_dst_addr;
-    inet_pton(AF_INET, "10.69.1.1", &test_src_addr);
-    inet_pton(AF_INET, "10.31.1.100", &test_dst_addr);
-    ConnectionIdentifier a = ConnectionIdentifier(test_src_addr, 100, test_dst_addr, 200);
-    ConnectionIdentifier b = ConnectionIdentifier(test_src_addr, 101, test_dst_addr, 200);
+    ConnectionIdentifier<Ipv4Addr> a = ConnectionIdentifier<Ipv4Addr>(Ipv4Addr((char *) "10.69.1.1"), 100, Ipv4Addr((char *) "10.31.1.100"), 200);
+    ConnectionIdentifier<Ipv4Addr> b = ConnectionIdentifier<Ipv4Addr>(Ipv4Addr((char *) "10.69.1.1"), 101, Ipv4Addr((char *) "10.31.1.100"), 200);
     CPPUNIT_ASSERT(a<b);
     CPPUNIT_ASSERT(!(b<a));
     
-    a = ConnectionIdentifier(test_src_addr, 100, test_dst_addr, 200);
-    b = ConnectionIdentifier(test_dst_addr, 100, test_src_addr, 200);
+    a = ConnectionIdentifier<Ipv4Addr>(Ipv4Addr((char *) "10.69.1.1"), 100, Ipv4Addr((char *) "10.31.1.100"), 200);
+    b = ConnectionIdentifier<Ipv4Addr>(Ipv4Addr((char *) "10.31.1.100"), 100, Ipv4Addr((char *) "10.69.1.1"), 200);
     CPPUNIT_ASSERT(a<b);
     CPPUNIT_ASSERT(!(b<a));
 }

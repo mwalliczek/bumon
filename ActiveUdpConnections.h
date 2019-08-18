@@ -24,14 +24,14 @@
 #include "Connection.h"
 #include "TrafficManager.h"
 #include "ConnectionIdentifier.h"
+#include "ActiveStateConnections.h"
 
-class ActiveUdpConnections {
-    std::map<ConnectionIdentifier, int> map;
-    std::mutex map_mutex;
-    
-    public:
-        void handlePacket(struct in_addr ip_src, struct in_addr ip_dst, uint16_t ip_len, const u_char *packet);
-        void checkTimeout();
+template<typename IP>
+class ActiveUdpConnections : public ActiveStateConnections<IP> {
+public:
+    ActiveUdpConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs);
+    void handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, const u_char *packet);
+    void checkTimeout();
 };
 
 #endif

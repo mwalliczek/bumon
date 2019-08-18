@@ -22,12 +22,12 @@
 #include <string>
 #include <list>
 #include <iostream>
+#include <functional>
 
 #include "ConfigfileParser.h"
-#include "InternNet.h"
-#include "bumon.h"
 
-extern std::list<InternNet*> interns;
+IpAndMask::IpAndMask(std::string ip, std::string mask):
+    ip(ip), mask(mask) { }
 
 inline std::string trim(std::string& str) {
     str.erase(0, str.find_first_not_of(' '));       //prefixing spaces
@@ -35,16 +35,23 @@ inline std::string trim(std::string& str) {
     return str;
 }
 
-bool handleIntern(std::string val) {
-    for (std::list<InternNet*>::iterator i=interns.begin(); i!=interns.end(); i++)
-        delete *i;
-    interns.clear();
-
+bool parseComma(std::string val, std::function<bool (std::string&)> func) {
     std::stringstream ss(val);
     while( ss.good() ) {
         std::string entry;
         getline( ss, entry, ',' );
         trim(entry);
+        if (func(entry)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+bool ConfigfileParser::handleIntern(std::string val) {
+    interns.clear();
+    return parseComma(val, [this] (std::string entry) {
         size_t slash = entry.find('/');
         std::string ip, mask;
         if (slash == std::string::npos) {
@@ -52,18 +59,17 @@ bool handleIntern(std::string val) {
         }
         ip = entry.substr(0, slash);
         mask = entry.substr(slash+1, std::string::npos);
-        InternNet* newInternNet = new InternNet(ip.c_str(), mask.c_str());
-        if (!newInternNet->valid) {
-            delete newInternNet;
-            return true;
-        }
-        interns.push_back(newInternNet);
-    }
-    return false;
+        this->interns.push_back(IpAndMask(ip, mask));
+        return false;
+    });
 }
 
-bool handleSelf(std::string val) {
-    return (1 != inet_pton(AF_INET, val.c_str(), &self_ip));
+bool ConfigfileParser::handleSelf(std::string val) {
+    selfs.clear();
+    return parseComma(val, [this] (std::string entry) {
+        this->selfs.push_back(entry);
+        return false;
+    });
 }
 
 ConfigfileParser::ConfigfileParser(std::string configFile)

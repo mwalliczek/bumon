@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-#include <arpa/inet.h>
-#include <netinet/in.h>
+#ifndef IPMOCK_H
+#define IPMOCK_H
 
-#include "InternNet.h"
+#include "Ip.h"
 
-InternNet::InternNet(const char* ip, const char* mask) {
-    valid = true;
-    valid &= (1 == inet_pton(AF_INET, ip, &(this->ip)));
-    valid &= (1 == inet_pton(AF_INET, mask, &(this->mask)));
-}
+class IpMock : public Ip {
+public:
+    IpMock(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections);
+    void checkTimeout() override;
+};
 
-bool InternNet::match(struct in_addr ip) {
-    return (ip.s_addr & this->mask.s_addr) == this->ip.s_addr;
-}
+#endif
