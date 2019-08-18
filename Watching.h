@@ -42,6 +42,7 @@ class Watching {
     public:
         explicit Watching(bool startThread);
         explicit Watching(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password, char* warning_main_sender, char* warning_main_recipient);
+        Watching(const Watching&) = delete;
         ~Watching();
         void addHistory(time_t time, std::map<int, long long int>* traffic);
         void watching();

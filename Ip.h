@@ -33,6 +33,7 @@ protected:
 public:
     explicit Ip(ConfigfileParser *configFile);
     virtual ~Ip();
+    Ip(const Ip&) = delete;
     virtual void checkTimeout();
     static void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 };
