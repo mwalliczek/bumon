@@ -31,6 +31,7 @@ static std::uniform_int_distribution<int> distribution(INT_MIN, INT_MAX);
 Connection::Connection(std::string ip, u_char protocol, bool inbound, bool intern):
 	ip(ip), protocol(protocol), inbound(inbound), intern(intern) {
     time(&begin);
+    dst_port = 0;
     lastAct = 0;
     end = 0;
     id = distribution(generator);

@@ -21,6 +21,7 @@
 
 class IpAddr {
 public:
+    virtual ~IpAddr() = default;
     virtual std::string toString() const = 0;
 };
 

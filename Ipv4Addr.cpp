@@ -21,6 +21,10 @@
 
 #include "Ipv4Addr.h"
 
+Ipv4Addr::Ipv4Addr() {
+    this->ip.s_addr = 0;
+}
+
 Ipv4Addr::Ipv4Addr(struct in_addr ip): ip(ip) { }
 
 Ipv4Addr::Ipv4Addr(std::string ip) {
@@ -38,23 +42,24 @@ std::string Ipv4Addr::toString() const {
     return std::string(inet_ntoa(ip));
 }
 
-bool operator== (const Ipv4Addr &a, const Ipv4Addr &b) {
+bool operator== (Ipv4Addr const&a, Ipv4Addr const&b) {
     return a.ip.s_addr == b.ip.s_addr;
 }
 
-bool operator!= (const Ipv4Addr &a, const Ipv4Addr &b) {
+bool operator!= (Ipv4Addr const&a, Ipv4Addr const&b) {
     return a.ip.s_addr != b.ip.s_addr;
 }
 
-bool operator< (const Ipv4Addr &a, const Ipv4Addr &b) {
+bool operator< (Ipv4Addr const&a, Ipv4Addr const&b) {
     return a.ip.s_addr < b.ip.s_addr;
 }
 
-bool operator> (const Ipv4Addr &a, const Ipv4Addr &b) {
+bool operator> (Ipv4Addr const&a, Ipv4Addr const&b) {
     return a.ip.s_addr > b.ip.s_addr;
 }
 
-Ipv4Addr& operator& (Ipv4Addr &a, const Ipv4Addr &b) {
-    a.ip.s_addr = a.ip.s_addr & b.ip.s_addr;
-    return a;
+Ipv4Addr operator& (Ipv4Addr const&a, Ipv4Addr const&b) {
+    Ipv4Addr result;
+    result.ip.s_addr = a.ip.s_addr & b.ip.s_addr;
+    return result;
 }

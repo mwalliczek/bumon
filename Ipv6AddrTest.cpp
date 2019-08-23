@@ -18,11 +18,11 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "Ipv4Addr.h"
+#include "Ipv6Addr.h"
 
-class Ipv4AddrTest : public CPPUNIT_NS::TestFixture
+class Ipv6AddrTest : public CPPUNIT_NS::TestFixture
 {
- CPPUNIT_TEST_SUITE( Ipv4AddrTest );
+ CPPUNIT_TEST_SUITE( Ipv6AddrTest );
  CPPUNIT_TEST( testParse );
  CPPUNIT_TEST( testCompare );
  CPPUNIT_TEST_SUITE_END();
@@ -32,27 +32,30 @@ class Ipv4AddrTest : public CPPUNIT_NS::TestFixture
   void testCompare();
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( Ipv4AddrTest );
+CPPUNIT_TEST_SUITE_REGISTRATION( Ipv6AddrTest );
 
-void Ipv4AddrTest::testParse() {
- Ipv4Addr *test = new Ipv4Addr((char *) "10.69.0.0");
+void Ipv6AddrTest::testParse() {
+ Ipv6Addr *test = new Ipv6Addr((char *) "2001:DB8:ABCD:12::");
  CPPUNIT_ASSERT(test->empty() == false);
  delete test;
  
- test = new Ipv4Addr((char *) "10.69.0.");
+ test = new Ipv6Addr((char *) "2001:DB8:ABCD:12:");
  CPPUNIT_ASSERT(test->empty() == true);
  delete test;
 }
 
-void Ipv4AddrTest::testCompare() {
- Ipv4Addr test1 = Ipv4Addr((char *) "10.69.0.0");
- Ipv4Addr test2 = Ipv4Addr((char *) "10.69.0.1");
- Ipv4Addr testMask = Ipv4Addr((char *) "255.255.0.0");
+void Ipv6AddrTest::testCompare() {
+ Ipv6Addr test1 = Ipv6Addr((char *) "2001:DB8:ABCD:12::");
+ Ipv6Addr test2 = Ipv6Addr((char *) "2001:DB8:ABCD:12::1");
+ Ipv6Addr test3 = Ipv6Addr((char *) "2000:DB8:ABCD:12::2");
+ Ipv6Addr testMask = Ipv6Addr((char *) "FFFF:FFFF:FFFF:FFFF::");
  
  CPPUNIT_ASSERT(test1 != test2);
  CPPUNIT_ASSERT(!(test1 == test2));
  CPPUNIT_ASSERT(test1 < test2);
  CPPUNIT_ASSERT(test2 > test1);
+ CPPUNIT_ASSERT(test2 > test3);
+ CPPUNIT_ASSERT(test3 < test2);
  CPPUNIT_ASSERT((test2 & testMask) == test1);
- CPPUNIT_ASSERT(test2 == Ipv4Addr((char *) "10.69.0.1"));
+ CPPUNIT_ASSERT(test2 == Ipv6Addr((char *) "2001:DB8:ABCD:12::1"));
 }

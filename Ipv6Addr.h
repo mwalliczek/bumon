@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef IPV4ADDR_H
-#define IPV4ADDR_H
+#ifndef IPV6ADDR_H
+#define IPV6ADDR_H
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
 #include "IpAddr.h"
 
-class Ipv4Addr : public IpAddr {
-    Ipv4Addr();
-    struct in_addr ip;
+class Ipv6Addr : public IpAddr {
+    struct in6_addr ip;
+    Ipv6Addr();
 public:
-    Ipv4Addr(struct in_addr ip);
-    Ipv4Addr(std::string ip);
+    Ipv6Addr(struct in6_addr ip);
+    Ipv6Addr(std::string ip);
     std::string toString() const;
     bool empty() const;
     
-    friend bool operator== (Ipv4Addr const&a, Ipv4Addr const&b);
-    friend bool operator!= (Ipv4Addr const&a, Ipv4Addr const&b);
-    friend bool operator< (Ipv4Addr const&a, Ipv4Addr const&b);
-    friend bool operator> (Ipv4Addr const&a, Ipv4Addr const&b);
-    friend Ipv4Addr operator& (Ipv4Addr const&a, Ipv4Addr const&b);
+    friend bool operator== (Ipv6Addr const&a, Ipv6Addr const&b);
+    friend bool operator!= (Ipv6Addr const&a, Ipv6Addr const&b);
+    friend bool operator< (Ipv6Addr const&a, Ipv6Addr const&b);
+    friend bool operator> (Ipv6Addr const&a, Ipv6Addr const&b);
+    friend Ipv6Addr operator& (Ipv6Addr const&a, Ipv6Addr const&b);
 };
 
 #endif
