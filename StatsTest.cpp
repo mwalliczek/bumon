@@ -38,49 +38,49 @@ void StatsTest::testCheckSpike() {
  
  Stats* sut = new Stats(mysql, (char *)"root", (char *)"nobody");
  
- sut->insert((char*) "2019-06-01 17:00:00", 0, 0, false, true, 2048);
+ sut->insert((char*) "2019-06-01 17:00:00", 0, 255, false, true, 2048);
  sut->insert((char*) "2019-06-01 17:00:00", 80, IPPROTO_TCP, false, true, 2048);
 
  sut->cleanup((char*) "2019-06-02 17:00:00");
- sut->insert((char*) "2019-06-02 17:00:00", 0, 0, false, true, 2047);
+ sut->insert((char*) "2019-06-02 17:00:00", 0, 255, false, true, 2047);
  sut->insert((char*) "2019-06-02 17:00:00", 80, IPPROTO_TCP, false, true, 2047);
 
  sut->cleanup((char*) "2019-06-03 17:00:00");
- sut->insert((char*) "2019-06-03 17:00:00", 0, 0, false, true, 2046);
+ sut->insert((char*) "2019-06-03 17:00:00", 0, 255, false, true, 2046);
  sut->insert((char*) "2019-06-03 17:00:00", 80, IPPROTO_TCP, false, true, 2046);
 
  sut->cleanup((char*) "2019-06-04 17:00:00");
- sut->insert((char*) "2019-06-04 17:00:00", 0, 0, false, true, 2045);
+ sut->insert((char*) "2019-06-04 17:00:00", 0, 255, false, true, 2045);
  sut->insert((char*) "2019-06-04 17:00:00", 80, IPPROTO_TCP, false, true, 2045);
 
  sut->cleanup((char*) "2019-06-05 17:00:00");
- sut->insert((char*) "2019-06-05 17:00:00", 0, 0, false, true, 2044);
+ sut->insert((char*) "2019-06-05 17:00:00", 0, 255, false, true, 2044);
  sut->insert((char*) "2019-06-05 17:00:00", 80, IPPROTO_TCP, false, true, 2044);
 
  sut->cleanup((char*) "2019-06-06 17:00:00");
- sut->insert((char*) "2019-06-06 17:00:00", 0, 0, false, true, 2043);
+ sut->insert((char*) "2019-06-06 17:00:00", 0, 255, false, true, 2043);
  sut->insert((char*) "2019-06-06 17:00:00", 80, IPPROTO_TCP, false, true, 2043);
 
  sut->cleanup((char*) "2019-06-07 17:00:00");
- sut->insert((char*) "2019-06-07 17:00:00", 0, 0, false, true, 2049);
+ sut->insert((char*) "2019-06-07 17:00:00", 0, 255, false, true, 2049);
  sut->insert((char*) "2019-06-07 17:00:00", 80, IPPROTO_TCP, false, true, 2049);
 
  sut->cleanup((char*) "2019-06-08 17:00:00");
- sut->insert((char*) "2019-06-08 17:00:00", 0, 0, false, true, 2050);
+ sut->insert((char*) "2019-06-08 17:00:00", 0, 255, false, true, 2050);
  sut->insert((char*) "2019-06-08 17:00:00", 80, IPPROTO_TCP, false, true, 2050);
 
  sut->cleanup((char*) "2019-06-09 17:00:00");
- sut->insert((char*) "2019-06-09 17:00:00", 0, 0, false, true, 2051);
+ sut->insert((char*) "2019-06-09 17:00:00", 0, 255, false, true, 2051);
  sut->insert((char*) "2019-06-09 17:00:00", 80, IPPROTO_TCP, false, true, 2051);
 
  sut->cleanup((char*) "2019-06-10 17:00:00");
- sut->insert((char*) "2019-06-10 17:00:00", 0, 0, false, true, 20452);
+ sut->insert((char*) "2019-06-10 17:00:00", 0, 255, false, true, 20452);
  sut->insert((char*) "2019-06-10 17:00:00", 80, IPPROTO_TCP, false, true, 2052);
  
  sut->cleanup((char*) "2019-07-01 17:00:00");
  mysql->insertConnection((char*)"2019-07-01 17:10:00", 300, (char*)"10.1.2.3", 80, IPPROTO_TCP, (char*)"", 20480, 1, 0);
  
- sut->insert((char*) "2019-07-01 17:00:00", 0, 0, false, true, 20480);
+ sut->insert((char*) "2019-07-01 17:00:00", 0, 255, false, true, 20480);
  sut->insert((char*) "2019-07-01 17:00:00", 80, IPPROTO_TCP, false, true, 20480);
  sut->insert((char*) "2019-07-01 17:00:00", 443, IPPROTO_TCP, false, true, 2048);
  

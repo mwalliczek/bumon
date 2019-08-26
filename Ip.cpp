@@ -143,8 +143,8 @@ Ip::Ip(ConfigfileParser* config) {
 }
 
 Ip::Ip(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections,
-            ActiveConnections<Ipv4Addr> *other): activev4TcpConnections(activev4TcpConnections),
-            activev4UdpConnections(activev4UdpConnections), other(other) { }
+            ActiveConnections<Ipv4Addr> *other): other(other), activev4TcpConnections(activev4TcpConnections),
+            activev4UdpConnections(activev4UdpConnections) { }
 
 Ip::~Ip() {
 	delete activev4TcpConnections;
@@ -182,7 +182,7 @@ Ip::got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pac
 			self->activev4UdpConnections->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), &packet[sizeEthernet + size_ip]);
 			break;
 		default:
-			logfile->log(2, "   Protocol: unknown (%d)", ipv4->ip_p);
+			logfile->log(2, " %s > %s Protocol: unknown (%d)", Ipv4Addr(ipv4->ip_src).toString().c_str(), Ipv4Addr(ipv4->ip_dst).toString().c_str(), ipv4->ip_p);
 			self->other->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), ipv4->ip_p);
 			return;
 	}

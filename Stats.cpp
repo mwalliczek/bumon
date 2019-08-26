@@ -37,11 +37,12 @@ void Stats::cleanup(char *statsbuff) {
     if (lastStatsTimestamp == std::string(statsbuff)) {
         return;
     }
+    logfile->log(3, "cleanup: %s", statsbuff);
     std::map<std::string, Statistics*>::iterator statsIter = statistics.begin();
     if (mysql_connection != NULL) {
         std::map<std::string, std::string> messages;
         while (statsIter != statistics.end()) {
-            if (statsIter->first.rfind(statsbuff, 0) != 0 && 0 == statsIter->second->dst_port && 0 == statsIter->second->protocol) {
+            if (statsIter->first.rfind(statsbuff, 0) != 0 && 0 == statsIter->second->dst_port && 255 == statsIter->second->protocol) {
                 std::string checkSpikeResult = checkSpike(statsIter->first.substr(0, 19).c_str(), 0, 255, statsIter->second->intern, 
                         statsIter->second->inbound, statsIter->second->sum);
                 messages[generateMessagesId(statsIter)] = checkSpikeResult;
@@ -53,7 +54,7 @@ void Stats::cleanup(char *statsbuff) {
             statsIter = statistics.begin();
             while (statsIter != statistics.end()) {
                 if (statsIter->first.rfind(statsbuff, 0) != 0 && 0 != statsIter->second->dst_port && 
-                        0 != statsIter->second->protocol) {
+                        255 != statsIter->second->protocol) {
                     std::string messagesId = generateMessagesId(statsIter);
                     std::map<std::string, std::string>::iterator messagesIter = messages.find(messagesId);
                     if (messagesIter == messages.end()) {
@@ -112,7 +113,7 @@ std::string formatBandwidth(long long int sum) {
     else if (sum >= kb)
         snprintf(returnSize, 256, "%.2f KB", (float)sum/kb);
     else
-        snprintf(returnSize, 256, "%.2lli Bytes", sum);
+        snprintf(returnSize, 256, "%lli Bytes", sum);
 
 
     return std::string(returnSize);
@@ -136,6 +137,7 @@ std::string resolveIp(std::string ipstr) {
 }
 
 std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum) {
+    logfile->log(3, "Check spike: %s, %d, %d, %d, %d, %lli", statsbuff, dst_port, protocol, intern, inbound, sum);
     std::vector<long long int>* stats = mysql_connection->lookupStats((char*) statsbuff, dst_port, protocol, intern, inbound);
     int length = stats->size();
     int number = mysql_connection->lookupNumberStats((char*) statsbuff);
@@ -149,6 +151,7 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
     }
     long long int q25 = (*stats)[length / 4];
     long long int q75 = (*stats)[length * 3 / 4];
+    logfile->log(3, "Q25: %lli, Q75: %lli", q25, q75);
     delete stats;
     long long int qdiff = q75 - q25;
     std::string message;
@@ -177,6 +180,7 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
             }
         }
     }
+    logfile->log(3, "Message: %s", message.c_str());
     return message;
 }
 

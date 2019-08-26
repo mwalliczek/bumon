@@ -91,7 +91,7 @@ const char* protocolName(short protocol) {
       return "tcp";
     }
     if (protocol == IPPROTO_UDP) {
-      return "ucp";
+      return "udp";
     }
     if (protocol == 255) {
       return "";
