@@ -25,11 +25,13 @@ class Ipv4AddrTest : public CPPUNIT_NS::TestFixture
  CPPUNIT_TEST_SUITE( Ipv4AddrTest );
  CPPUNIT_TEST( testParse );
  CPPUNIT_TEST( testCompare );
+ CPPUNIT_TEST( testResolv );
  CPPUNIT_TEST_SUITE_END();
 
  public:
   void testParse();
   void testCompare();
+  void testResolv();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( Ipv4AddrTest );
@@ -55,4 +57,10 @@ void Ipv4AddrTest::testCompare() {
  CPPUNIT_ASSERT(test2 > test1);
  CPPUNIT_ASSERT((test2 & testMask) == test1);
  CPPUNIT_ASSERT(test2 == Ipv4Addr((char *) "10.69.0.1"));
+}
+
+void Ipv4AddrTest::testResolv() {
+ Ipv4Addr *test = new Ipv4Addr((char *) "127.0.0.1");
+ CPPUNIT_ASSERT(test->resolve() == "127.0.0.1 (localhost)");
+ delete test;
 }

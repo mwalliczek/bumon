@@ -34,7 +34,9 @@ Connection::Connection(std::string ip, u_char protocol, bool inbound, bool inter
     dst_port = 0;
     lastAct = 0;
     end = 0;
-    id = distribution(generator);
+    do {
+	id = distribution(generator);
+    } while (allConnections.count(id) > 0);
     ack = false;
     alreadyRunning = false;
     payload = false;

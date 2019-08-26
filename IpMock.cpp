@@ -17,8 +17,8 @@
 #include "IpMock.h"
 
 IpMock::IpMock(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, 
-		ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections) : Ip(activev4TcpConnections,
-		activev4UdpConnections, NULL) { }
+		ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections) : Ip(activev4TcpConnections, NULL,
+		activev4UdpConnections, NULL, NULL, NULL) { }
 
 void IpMock::checkTimeout() {
 	if (NULL != activev4TcpConnections) {

@@ -104,3 +104,4 @@ void ActiveUdpConnections<IP>::checkTimeout() {
 }
 
 template class ActiveUdpConnections<Ipv4Addr>;
+template class ActiveUdpConnections<Ipv6Addr>;

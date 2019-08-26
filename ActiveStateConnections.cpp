@@ -17,6 +17,7 @@
 #include "ActiveStateConnections.h"
 #include "bumon.h"
 #include "Ipv4Addr.h"
+#include "Ipv6Addr.h"
 
 template<typename IP>
 ActiveStateConnections<IP>::ActiveStateConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs):
@@ -38,3 +39,4 @@ Connection* ActiveStateConnections<IP>::createConnection(IP ip_src, int sport, I
 }
 
 template class ActiveStateConnections<Ipv4Addr>;
+template class ActiveStateConnections<Ipv6Addr>;

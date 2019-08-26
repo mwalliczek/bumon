@@ -18,6 +18,7 @@
 
 #include "ConnectionIdentifier.h"
 #include "Ipv4Addr.h"
+#include "Ipv6Addr.h"
 
 template<typename IP>
 ConnectionIdentifier<IP>::ConnectionIdentifier(IP ip_src, int sport, IP ip_dst, int dport):
@@ -32,3 +33,4 @@ std::string ConnectionIdentifier<IP>::toString() const {
 }
 
 template class ConnectionIdentifier<Ipv4Addr>;
+template class ConnectionIdentifier<Ipv6Addr>;

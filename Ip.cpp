@@ -127,29 +127,86 @@ struct sniff_ip {
 #define IP_V(ip)                (((ip)->ip_vhl) >> 4)
 
 Ip::Ip(ConfigfileParser* config) {
-	std::list<InternNet<Ipv4Addr>> interns;
-	std::list<Ipv4Addr> selfs;
+	std::list<InternNet<Ipv4Addr>> internsv4;
+	std::list<Ipv4Addr> selfsv4;
+	std::list<InternNet<Ipv6Addr>> internsv6;
+	std::list<Ipv6Addr> selfsv6;
 	if (NULL != config) {
 		for (auto intern : config->interns) {
-			interns.push_back(InternNet<Ipv4Addr>(intern.ip, intern.mask));
+			InternNet<Ipv4Addr> internNetv4 = InternNet<Ipv4Addr>(intern.ip, intern.mask);
+			if (internNetv4.valid) {
+				internsv4.push_back(internNetv4);
+			} else {
+				InternNet<Ipv6Addr> internNetv6 = InternNet<Ipv6Addr>(intern.ip, intern.mask);
+				if (!internNetv6.valid) {
+					logfile->log(2, "Could not parse %s / %s", intern.ip.c_str(), intern.mask.c_str());
+				} else {
+					internsv6.push_back(internNetv6);
+				}
+			}
 		}
 		for (auto self : config->selfs) {
-			selfs.push_back(Ipv4Addr(self));
+			Ipv4Addr selfv4 = Ipv4Addr(self);
+			if (!selfv4.empty()) {
+				selfsv4.push_back(selfv4);
+			} else {
+				Ipv6Addr selfv6 = Ipv6Addr(self);
+				if (selfv6.empty()) {
+					logfile->log(2, "Could not parse %s", self.c_str());
+				} else {
+					selfsv6.push_back(selfv6);
+				}
+			}
 		}
 	}
-	activev4TcpConnections = new ActiveTcpConnections<Ipv4Addr>(interns, selfs);
-	activev4UdpConnections = new ActiveUdpConnections<Ipv4Addr>(interns, selfs);
-	other = new ActiveConnections<Ipv4Addr>(interns, selfs);
+	activev4TcpConnections = new ActiveTcpConnections<Ipv4Addr>(internsv4, selfsv4);
+	activev4UdpConnections = new ActiveUdpConnections<Ipv4Addr>(internsv4, selfsv4);
+	otherv4 = new ActiveConnections<Ipv4Addr>(internsv4, selfsv4);
+	activev6TcpConnections = new ActiveTcpConnections<Ipv6Addr>(internsv6, selfsv6);
+	activev6UdpConnections = new ActiveUdpConnections<Ipv6Addr>(internsv6, selfsv6);
+	otherv6 = new ActiveConnections<Ipv6Addr>(internsv6, selfsv6);
 }
 
-Ip::Ip(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections,
-            ActiveConnections<Ipv4Addr> *other): other(other), activev4TcpConnections(activev4TcpConnections),
-            activev4UdpConnections(activev4UdpConnections) { }
+Ip::Ip(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, ActiveTcpConnections<Ipv6Addr> *activev6TcpConnections, 
+	    ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections, 
+	    ActiveUdpConnections<Ipv6Addr> *activev6UdpConnections,
+	    ActiveConnections<Ipv4Addr> *otherv4, ActiveConnections<Ipv6Addr> *otherv6): 
+            otherv4(otherv4), otherv6(otherv6), activev4TcpConnections(activev4TcpConnections),
+            activev6TcpConnections(activev6TcpConnections), activev4UdpConnections(activev4UdpConnections), 
+            activev6UdpConnections(activev6UdpConnections) { }
 
 Ip::~Ip() {
 	delete activev4TcpConnections;
 	delete activev4UdpConnections;
-	delete other;
+	delete otherv4;
+	delete activev6TcpConnections;
+	delete activev6UdpConnections;
+	delete otherv6;
+}
+
+void Ip::handleV4(const u_char *packet) {
+	/* define/compute ip header offset */
+	const struct sniff_ip *ipv4 = (struct sniff_ip*)packet;
+	
+	int size_ip = IP_HL(ipv4)*4;
+	if (size_ip < 20) {
+            logfile->log(9, "   * Invalid IP header length: %u bytes", size_ip);
+            return;
+        }
+
+	/* determine protocol */	
+	switch(ipv4->ip_p) {
+		case IPPROTO_TCP:
+			activev4TcpConnections->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), &packet[size_ip], size_ip);
+			break;
+		case IPPROTO_UDP:
+			activev4UdpConnections->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), &packet[size_ip]);
+			break;
+		default:
+			logfile->log(2, " %s > %s Protocol: unknown (%d)", Ipv4Addr(ipv4->ip_src).toString().c_str(), Ipv4Addr(ipv4->ip_dst).toString().c_str(), ipv4->ip_p);
+			otherv4->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), ipv4->ip_p);
+			return;
+	}
 }
 
 /*
@@ -159,38 +216,21 @@ void
 Ip::got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 {
 	Ip* self = (Ip*) args;
-
-	/* declare pointers to packet headers */
-	const struct sniff_ip *ipv4;              /* The IP header */
-
-	int size_ip;
 	
-	/* define/compute ip header offset */
-	ipv4 = (struct sniff_ip*)&packet[sizeEthernet];
-	size_ip = IP_HL(ipv4)*4;
-	if (size_ip < 20) {
-            logfile->log(9, "   * Invalid IP header length: %u bytes", size_ip);
-            return;
-        }
+	int version = packet[sizeEthernet] >> 4;
 
-	/* determine protocol */	
-	switch(ipv4->ip_p) {
-		case IPPROTO_TCP:
-			self->activev4TcpConnections->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), &packet[sizeEthernet + size_ip], size_ip);
-			break;
-		case IPPROTO_UDP:
-			self->activev4UdpConnections->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), &packet[sizeEthernet + size_ip]);
-			break;
-		default:
-			logfile->log(2, " %s > %s Protocol: unknown (%d)", Ipv4Addr(ipv4->ip_src).toString().c_str(), Ipv4Addr(ipv4->ip_dst).toString().c_str(), ipv4->ip_p);
-			self->other->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), ipv4->ip_p);
-			return;
+	if (version == 4) {
+		self->handleV4(&packet[sizeEthernet]);
+	} else if (version == 6) {
+	
+	} else {
+		logfile->log(2, "  unknown IP Protocol %d", version);
 	}
-	
-	return;
 }
 
 void Ip::checkTimeout() {
 	activev4TcpConnections->checkTimeout();
 	activev4UdpConnections->checkTimeout();
+	activev6TcpConnections->checkTimeout();
+	activev6UdpConnections->checkTimeout();
 }

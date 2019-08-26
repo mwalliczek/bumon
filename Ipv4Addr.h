@@ -29,6 +29,7 @@ public:
     Ipv4Addr(struct in_addr ip);
     Ipv4Addr(std::string ip);
     std::string toString() const;
+    std::string resolve() const;
     bool empty() const;
     
     friend bool operator== (Ipv4Addr const&a, Ipv4Addr const&b);

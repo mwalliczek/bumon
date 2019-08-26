@@ -67,8 +67,11 @@ Ipv4Addr.o:	Ipv4Addr.cpp Ipv4Addr.h IpAddr.h
 Ipv6Addr.o:	Ipv6Addr.cpp Ipv6Addr.h IpAddr.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c Ipv6Addr.cpp
 
-bumon:		bumon.o Connection.o FindProcess.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o Ip.o Ipv4Addr.o TopConnectionIdentifier.o
-		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o FindProcess.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o Ip.o Ipv4Addr.o TopConnectionIdentifier.o $(LIBS)
+InternNet.o:	InternNet.cpp InternNet.h
+		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c InternNet.cpp
+
+bumon:		bumon.o Connection.o FindProcess.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o Ip.o Ipv4Addr.o Ipv6Addr.o InternNet.o TopConnectionIdentifier.o
+		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o FindProcess.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o Ip.o Ipv4Addr.o Ipv6Addr.o InternNet.o TopConnectionIdentifier.o $(LIBS)
 		chmod +x bumon
 
 InternNetTest.o:	InternNetTest.cpp InternNet.h
@@ -129,8 +132,8 @@ Ipv6AddrTest.o:	Ipv6AddrTest.cpp Ipv6Addr.h
 test.o:		test.cpp
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c test.cpp
 
-test:		InternNetTest.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnectionsTest.o ActiveTcpConnections.o test.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o MySql.o Stats.o MySqlTest.o StatsTest.o IpTest.o Ip.o IpMock.o TopConnectionIdentifierTest.o TopConnectionIdentifier.o Ipv4Addr.o Ipv4AddrTest.o Ipv6Addr.o Ipv6AddrTest.o 
-		$(CC) $(LDFLAGS) $(LIBPATH) -o test test.o InternNetTest.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveTcpConnectionsTest.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o MySql.o Stats.o MySqlTest.o StatsTest.o IpTest.o Ip.o IpMock.o TopConnectionIdentifierTest.o TopConnectionIdentifier.o Ipv4Addr.o Ipv4AddrTest.o Ipv6Addr.o Ipv6AddrTest.o -lcppunit $(LIBS)
+test:		InternNet.o InternNetTest.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnectionsTest.o ActiveTcpConnections.o test.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o MySql.o Stats.o MySqlTest.o StatsTest.o IpTest.o Ip.o IpMock.o TopConnectionIdentifierTest.o TopConnectionIdentifier.o Ipv4Addr.o Ipv4AddrTest.o Ipv6Addr.o Ipv6AddrTest.o 
+		$(CC) $(LDFLAGS) $(LIBPATH) -o test test.o InternNet.o InternNetTest.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveTcpConnectionsTest.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o MySql.o Stats.o MySqlTest.o StatsTest.o IpTest.o Ip.o IpMock.o TopConnectionIdentifierTest.o TopConnectionIdentifier.o Ipv4Addr.o Ipv4AddrTest.o Ipv6Addr.o Ipv6AddrTest.o -lcppunit $(LIBS)
 		
 clean:
 		rm -f *.o *.gcov *.gcda *.gcno bumon test

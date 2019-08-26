@@ -29,6 +29,7 @@ public:
     Ipv6Addr(struct in6_addr ip);
     Ipv6Addr(std::string ip);
     std::string toString() const;
+    std::string resolve() const;
     bool empty() const;
     
     friend bool operator== (Ipv6Addr const&a, Ipv6Addr const&b);

@@ -17,11 +17,12 @@
 #ifndef INTERN_NET_H
 #define INTERN_NET_H
 
-#include <netinet/in.h>
+#include <string>
 
 template<typename IP>
 class InternNet {
     IP ip, mask;
+    IP calcMask(std::string bits);
     
     public:
         InternNet(std::string ip, std::string mask);
@@ -31,9 +32,16 @@ class InternNet {
 
 template<typename IP>
 InternNet<IP>::InternNet(std::string ip, std::string mask): ip(IP(ip)), mask(IP(mask)) {
-    valid = true;
-    valid &= !this->ip.empty();
-    valid &= !this->mask.empty();
+    if (this->ip.empty()) {
+        valid = false;
+    } else {
+        if (!this->mask.empty()) {
+            valid = true;
+        } else {
+            this->mask = calcMask(mask);
+            valid = !this->mask.empty();
+        }
+    }
 }
 
 template<typename IP>

@@ -17,6 +17,7 @@
 #include "ActiveConnections.h"
 
 #include "Ipv4Addr.h"
+#include "Ipv6Addr.h"
 
 template<typename IP>
 ActiveConnections<IP>::ActiveConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs):
@@ -57,3 +58,4 @@ void ActiveConnections<IP>::handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, 
 }
 
 template class ActiveConnections<Ipv4Addr>;
+template class ActiveConnections<Ipv6Addr>;

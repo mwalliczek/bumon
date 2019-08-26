@@ -21,14 +21,21 @@
 #include "ActiveTcpConnections.h"
 #include "ActiveUdpConnections.h"
 #include "Ipv4Addr.h"
+#include "Ipv6Addr.h"
 
 class Ip {
-    ActiveConnections<Ipv4Addr> *other;
+    ActiveConnections<Ipv4Addr> *otherv4;
+    ActiveConnections<Ipv6Addr> *otherv6;
+    void handleV4(const u_char *packet);
 protected:
     ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections;
+    ActiveTcpConnections<Ipv6Addr> *activev6TcpConnections;
     ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections;
-    Ip(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections,
-            ActiveConnections<Ipv4Addr> *other);
+    ActiveUdpConnections<Ipv6Addr> *activev6UdpConnections;
+    Ip(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, ActiveTcpConnections<Ipv6Addr> *activev6TcpConnections,
+            ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections, 
+            ActiveUdpConnections<Ipv6Addr> *activev6UdpConnections, ActiveConnections<Ipv4Addr> *otherv4, 
+            ActiveConnections<Ipv6Addr> *otherv6);
 
 public:
     explicit Ip(ConfigfileParser *configFile);

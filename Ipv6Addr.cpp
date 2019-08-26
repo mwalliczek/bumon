@@ -43,6 +43,10 @@ std::string Ipv6Addr::toString() const {
     return std::string(straddr);
 }
 
+std::string Ipv6Addr::resolve() const {
+    return "";
+}
+
 bool operator== (Ipv6Addr const&a, Ipv6Addr const&b) {
     for(size_t i=0; i<16; i++) {
         if (a.ip.s6_addr[i] != b.ip.s6_addr[i]) {

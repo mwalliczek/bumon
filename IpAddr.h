@@ -23,6 +23,7 @@ class IpAddr {
 public:
     virtual ~IpAddr() = default;
     virtual std::string toString() const = 0;
+    virtual std::string resolve() const = 0;
 };
 
 #endif

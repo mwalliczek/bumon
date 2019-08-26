@@ -271,3 +271,4 @@ void ActiveTcpConnections<IP>::checkTimeout() {
 }
 
 template class ActiveTcpConnections<Ipv4Addr>;
+template class ActiveTcpConnections<Ipv6Addr>;

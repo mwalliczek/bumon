@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-
 #include <sstream>
 
 #include "Statistics.h"
@@ -42,7 +37,8 @@ void Stats::cleanup(char *statsbuff) {
     if (mysql_connection != NULL) {
         std::map<std::string, std::string> messages;
         while (statsIter != statistics.end()) {
-            if (statsIter->first.rfind(statsbuff, 0) != 0 && 0 == statsIter->second->dst_port && 255 == statsIter->second->protocol) {
+            if (statsIter->first.rfind(statsbuff, 0) != 0 && 0 == statsIter->second->dst_port && 
+                    255 == statsIter->second->protocol && statsIter->second->sum >= 1024) {
                 std::string checkSpikeResult = checkSpike(statsIter->first.substr(0, 19).c_str(), 0, 255, statsIter->second->intern, 
                         statsIter->second->inbound, statsIter->second->sum);
                 messages[generateMessagesId(statsIter)] = checkSpikeResult;
@@ -54,7 +50,7 @@ void Stats::cleanup(char *statsbuff) {
             statsIter = statistics.begin();
             while (statsIter != statistics.end()) {
                 if (statsIter->first.rfind(statsbuff, 0) != 0 && 0 != statsIter->second->dst_port && 
-                        255 != statsIter->second->protocol) {
+                        255 != statsIter->second->protocol && statsIter->second->sum >= 1024) {
                     std::string messagesId = generateMessagesId(statsIter);
                     std::map<std::string, std::string>::iterator messagesIter = messages.find(messagesId);
                     if (messagesIter == messages.end()) {
@@ -120,20 +116,13 @@ std::string formatBandwidth(long long int sum) {
 }
 
 std::string resolveIp(std::string ipstr) {
-    struct in_addr ip;
-    struct hostent *hp;
-    
-    if (!inet_aton(ipstr.c_str(), &ip)) {
+    Ipv4Addr ipv4Addr = Ipv4Addr(ipstr);
+    if (ipv4Addr.empty()) {
         logfile->log(3, "Can't parse IP address %s", ipstr.c_str());
         return ipstr;
     }
-
-    if ((hp = gethostbyaddr((const void *)&ip, sizeof ip, AF_INET)) == NULL) {
-        logfile->log(10, "No name associated with %s", ipstr.c_str());
-        return ipstr;
-    }
     
-    return ipstr + " (" + hp->h_name + ")";
+    return ipv4Addr.resolve();
 }
 
 std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum) {

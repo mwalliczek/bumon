@@ -57,5 +57,5 @@ void Ipv6AddrTest::testCompare() {
  CPPUNIT_ASSERT(test2 > test3);
  CPPUNIT_ASSERT(test3 < test2);
  CPPUNIT_ASSERT((test2 & testMask) == test1);
- CPPUNIT_ASSERT(test2 == Ipv6Addr((char *) "2001:DB8:ABCD:12::1"));
+ CPPUNIT_ASSERT(test2.toString() == "2001:db8:abcd:12::1");
 }

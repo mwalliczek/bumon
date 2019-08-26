@@ -15,7 +15,10 @@
  */
 
 #include <arpa/inet.h>
-
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+       
 #include "Logfile.h"
 #include "bumon.h"
 
@@ -40,6 +43,20 @@ bool Ipv4Addr::empty() const {
 
 std::string Ipv4Addr::toString() const {
     return std::string(inet_ntoa(ip));
+}
+
+std::string Ipv4Addr::resolve() const {
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_addr = ip;
+    socklen_t addrlen = sizeof(addr);
+    char hbuf[NI_MAXHOST];
+
+    if (getnameinfo((const sockaddr*)&addr, addrlen, hbuf, sizeof(hbuf), NULL, 0, NI_NAMEREQD)) {
+        return toString();
+    } else {
+        return toString() + " (" + hbuf + ")";
+    }
 }
 
 bool operator== (Ipv4Addr const&a, Ipv4Addr const&b) {
