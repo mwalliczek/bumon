@@ -67,9 +67,9 @@ void ActiveUdpConnections<IP>::handlePacket(IP ip_src, IP ip_dst, uint16_t ip_le
 		} else if (this->isSelf(ip_src) && !(process = findProcesses->findListenUdpProcess(sport)).empty()) {
 	            foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
 	            foundConnection->process = process;
-		} else if (this->isSelf(ip_dst) && dport < 1024) {
+		} else if (dport < 1024) {
 	            foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
-		} else if (this->isSelf(ip_src) && sport < 1024) {
+		} else if (sport < 1024) {
 	            foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
 		} else {
 	            foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
