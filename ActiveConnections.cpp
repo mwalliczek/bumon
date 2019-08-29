@@ -47,7 +47,7 @@ template<typename IP>
 Connection* ActiveConnections<IP>::createSimpleConnection(IP ip_src, IP ip_dst, u_char protocol) const {
     bool inbound = isSelf(ip_dst);
     bool intern = inbound ? isIntern(ip_src) : isIntern(ip_dst);
-    return new Connection(inbound ? ip_src.toString() : ip_dst.toString(), protocol, inbound, intern);
+    return new Connection(std::shared_ptr<IpAddr>(inbound ? new IP(ip_src) : new IP(ip_dst)), protocol, inbound, intern);
 }
 
 template<typename IP>

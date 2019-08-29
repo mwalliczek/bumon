@@ -28,6 +28,7 @@ class Ipv4Addr : public IpAddr {
 public:
     Ipv4Addr(struct in_addr ip);
     Ipv4Addr(std::string ip);
+    Ipv4Addr(const Ipv4Addr& ip);
     std::string toString() const;
     std::string resolve() const;
     bool empty() const;

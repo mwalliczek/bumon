@@ -15,6 +15,7 @@
  */
 
 #include <sstream>
+#include <algorithm>	// std::sort
 
 #include "Statistics.h"
 
@@ -88,6 +89,20 @@ void Stats::cleanup(char *statsbuff) {
             statsIter++;
         }
     }
+    auto topHostsIter = topHosts.begin();
+    while (topHostsIter != topHosts.end()) {
+        if (topHostsIter->first.rfind(statsbuff, 0) != 0) {
+            auto pacIter = topHostsIter->second->processAndContent.begin();
+            while (pacIter != topHostsIter->second->processAndContent.end()) {
+                delete pacIter->second;
+                pacIter = topHostsIter->second->processAndContent.erase(pacIter);
+            }
+            delete topHostsIter->second;
+            topHostsIter = topHosts.erase(topHostsIter);
+        } else {
+            topHostsIter++;
+        }
+    }
 }
 
 std::string formatBandwidth(long long int sum) {
@@ -96,9 +111,7 @@ std::string formatBandwidth(long long int sum) {
     float mb = 1048576;
     float kb = 1024;
 
-
     char returnSize[256];
-
 
     if (sum >= tb)
         snprintf(returnSize, 256, "%.2f TB", (float)sum/tb);        
@@ -111,18 +124,21 @@ std::string formatBandwidth(long long int sum) {
     else
         snprintf(returnSize, 256, "%lli Bytes", sum);
 
-
     return std::string(returnSize);
 }
 
-std::string resolveIp(std::string ipstr) {
-    Ipv4Addr ipv4Addr = Ipv4Addr(ipstr);
-    if (ipv4Addr.empty()) {
-        logfile->log(3, "Can't parse IP address %s", ipstr.c_str());
-        return ipstr;
+ProcessAndContent* findProcessAndContent(std::map<std::string, ProcessAndContent*>* map) {
+    if (map->empty()) {
+        return NULL;
     }
-    
-    return ipv4Addr.resolve();
+    std::vector<ProcessAndContent*> result; 
+    for (auto& iter : (*map)) {
+        result.push_back(iter.second);
+    }
+    std::sort(result.begin(), result.end(), [](const ProcessAndContent* a, const ProcessAndContent* b) -> bool { 
+        return a->sum > b->sum; 
+    });
+    return *(result.begin());
 }
 
 std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum) {
@@ -161,11 +177,22 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
         } else {
             message = "  Port " + std::to_string(dst_port) + " (" + std::string(protocolName(protocol)) + ")" + message;
             if (!intern) {
-                std::vector<HostWithBandwidth>* topHosts = mysql_connection->lookupTopHostsWithBandwidth((char*) statsbuff, dst_port, protocol, inbound);
-                for (auto& topHostsIter : (*topHosts)) {
-                    message += "    " + resolveIp(topHostsIter.host) + ": " + formatBandwidth(topHostsIter.bytes) + "\n";
+                std::vector<TopHosts> currentTopHosts = lookupTopHosts(statsbuff, dst_port, protocol, intern, inbound);
+                int topHostCount = 0;
+                for (auto& topHostsIter : currentTopHosts) {
+                    message += "    " + topHostsIter.ip->resolve() + ": " + formatBandwidth(topHostsIter.sum) + "\n";
+                    ProcessAndContent* pac = findProcessAndContent(&topHostsIter.processAndContent);
+                    if (pac != NULL && (!pac->process.empty() || !pac->content.empty())) {
+                        message += "      " + pac->process;
+                        if (!pac->content.empty()) {
+                            message += " (" + pac->content + ")";
+                        }
+                        message += "\n";
+                    }
+                    if (topHostCount++ == 3) {
+                        break;
+                    }
                 }
-                delete topHosts;
             }
         }
     }
@@ -173,11 +200,37 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
     return message;
 }
 
-void Stats::insert(char *statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum) {
+std::stringstream generateId(const char *statsbuff, int dst_port, int protocol, bool intern, bool inbound) {
     std::stringstream result;
-    lastStatsTimestamp = std::string(statsbuff);
     result << statsbuff << " " << dst_port << " " << protocol << " " << intern << " " << inbound;
-    std::string statsId = result.str();
+    return result;
+}
+
+std::string generateTopHostsId(char *statsbuff, SumConnectionIdentifier sumConnectionIdentifier) {
+    std::stringstream result = generateId(statsbuff, sumConnectionIdentifier.dst_port, 
+        sumConnectionIdentifier.protocol, sumConnectionIdentifier.intern, sumConnectionIdentifier.inbound);
+    result << " " << sumConnectionIdentifier.ip;
+    return result.str();
+}
+
+bool operator<(const TopHosts &t1, const TopHosts &t2) {
+    return t1.sum > t2.sum;
+}
+
+std::vector<TopHosts> Stats::lookupTopHosts(const char *statsbuff, int dst_port, int protocol, bool intern, bool inbound) {
+    std::vector<TopHosts> result;
+    std::string id = generateId(statsbuff, dst_port, protocol, intern, inbound).str();
+    for (auto& topHostsIter : topHosts) {
+        if (topHostsIter.first.rfind(id, 0) == 0) {
+            result.push_back(*(topHostsIter.second));
+        }
+    }
+    std::sort(result.begin(), result.end());
+    return result;
+}
+
+void Stats::insertStats(char *statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum) {
+    std::string statsId = generateId(statsbuff, dst_port, protocol, intern, inbound).str();
     std::map<std::string, Statistics*>::iterator statsIter = statistics.find(statsId);
     if (statsIter != statistics.end()) {
         statsIter->second->sum += sum;
@@ -189,6 +242,37 @@ void Stats::insert(char *statsbuff, int dst_port, int protocol, bool intern, boo
         newStats->intern = intern;
         newStats->inbound = inbound;
         statistics[statsId] = newStats;
+    }
+}
+
+
+void Stats::insert(char *statsbuff, SumConnectionIdentifier sumConnectionIdentifier, long long int sum) {
+    lastStatsTimestamp = std::string(statsbuff);
+    insertStats(statsbuff, 0, 255, sumConnectionIdentifier.intern, sumConnectionIdentifier.inbound, sum);
+    insertStats(statsbuff, sumConnectionIdentifier.dst_port, sumConnectionIdentifier.protocol, 
+        sumConnectionIdentifier.intern, sumConnectionIdentifier.inbound, sum);
+    std::string topHostsId = generateTopHostsId(statsbuff, sumConnectionIdentifier);
+    auto topHostsIter = topHosts.find(topHostsId);
+    TopHosts* topHost;
+    if (topHostsIter != topHosts.end()) {
+        topHostsIter->second->sum += sum;
+        topHost = topHostsIter->second;
+    } else {
+        topHost = new TopHosts();
+        topHost->ip = sumConnectionIdentifier.ipAddr;
+        topHost->sum = sum;
+        topHosts[topHostsId] = topHost;
+    }
+    std::string processAndContent = sumConnectionIdentifier.process + "\\" + sumConnectionIdentifier.content;
+    auto processAndContentIter = topHost->processAndContent.find(processAndContent);
+    if (processAndContentIter != topHost->processAndContent.end()) {
+        processAndContentIter->second->sum += sum;
+    } else {
+        ProcessAndContent* pac = new ProcessAndContent();
+        pac->process = sumConnectionIdentifier.process;
+        pac->content = sumConnectionIdentifier.content;
+        pac->sum = sum;
+        topHost->processAndContent[processAndContent] = pac;
     }
 }
 

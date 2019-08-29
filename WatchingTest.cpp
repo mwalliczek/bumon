@@ -44,7 +44,7 @@ void WatchingTest::testAll() {
  ConfigfileParser* config = new ConfigfileParser("testConfigMock.conf");
  ip = new Ip(config);
 
- Connection* con = new Connection("10.69.1.1", 100, 1, "testProcess", false, false);
+ Connection* con = new Connection(std::shared_ptr<IpAddr>(new Ipv4Addr("10.69.1.1")), 100, 1, "testProcess", false, false);
  
  std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
  (*traffic1)[con->id] = 100;
@@ -77,7 +77,7 @@ void WatchingTest::testAll() {
 void WatchingTest::testIntegration() {
  ConfigfileParser* config = new ConfigfileParser("testConfigMock.conf");
  ip = new Ip(config);
- Connection* con = new Connection("10.69.1.1", 80, IPPROTO_TCP, "testProcess", false, false);
+ Connection* con = new Connection(std::shared_ptr<IpAddr>(new Ipv4Addr("10.69.1.1")), 80, IPPROTO_TCP, "testProcess", false, false);
  
  std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
  (*traffic1)[con->id] = 100;

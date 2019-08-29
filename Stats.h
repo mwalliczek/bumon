@@ -19,9 +19,25 @@
 
 #include "MySql.h"
 #include "Statistics.h"
+#include "SumConnectionIdentifier.h"
+
+struct ProcessAndContent {
+    std::string process;
+    std::string content;
+    long long int sum;
+};
+
+struct TopHosts {
+    std::shared_ptr<IpAddr> ip;
+    long long int sum;
+    std::map<std::string, ProcessAndContent*> processAndContent;
+};
+
+bool operator<(const TopHosts &t1, const TopHosts &t2);
 
 class Stats {
     std::map<std::string, Statistics*> statistics;
+    std::map<std::string, TopHosts*> topHosts;
     std::string lastStatsTimestamp;
     MySql* mysql_connection;
     char* sender;
@@ -29,11 +45,13 @@ class Stats {
     
     std::string checkSpike(const char *statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum);
     void sendMail(std::map<std::string, std::string>* messages);
+    void insertStats(char *statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum);
+    std::vector<TopHosts> lookupTopHosts(const char *statsbuff, int dst_port, int protocol, bool intern, bool inbound);
     
     public:
         Stats(MySql* mysql_connection, char* sender, char* recipient);
         void cleanup(char *statsbuff);
-        void insert(char *statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum);
+        void insert(char *statsbuff, SumConnectionIdentifier sumConnectionIdentifier, long long int sum);
 };
 
 #endif

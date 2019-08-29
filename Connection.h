@@ -19,14 +19,16 @@
 
 #include <string>
 #include <ctime>
+#include <memory>
+
+#include "IpAddr.h"
 
 class Connection {
     bool payload;
-    std::string identifier;
     
     public:
-        Connection(std::string ip, u_short dst_port, u_char protocol, std::string process, bool inbound, bool intern);
-        Connection(std::string ip, u_char protocol, bool inbound, bool intern);
+        Connection(std::shared_ptr<IpAddr> ip, u_short dst_port, u_char protocol, std::string process, bool inbound, bool intern);
+        Connection(std::shared_ptr<IpAddr> ip, u_char protocol, bool inbound, bool intern);
         void stop();
         void handleData(int len);
         void handleData(int len, const u_char *payload, int size_payload);
@@ -36,7 +38,7 @@ class Connection {
         time_t end;
         bool alreadyRunning;
         std::string content;
-        std::string ip;
+        std::shared_ptr<IpAddr> ip;
         u_short dst_port;
         time_t begin;
         u_char protocol;

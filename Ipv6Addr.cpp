@@ -32,6 +32,8 @@ Ipv6Addr::Ipv6Addr(std::string ip) {
     } 
 }
 
+Ipv6Addr::Ipv6Addr(const Ipv6Addr& ip): ip(ip.ip) { }
+
 bool Ipv6Addr::empty() const {
     return IN6_IS_ADDR_UNSPECIFIED(&ip);
 }

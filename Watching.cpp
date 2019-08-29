@@ -24,7 +24,7 @@
 #include "bumon.h"
 #include "Connection.h"
 #include "Watching.h"
-#include "TopConnectionIdentifier.h"
+#include "SumConnectionIdentifier.h"
 
 void callWatching(Watching* watching) {
     while (watching->doWatch) {
@@ -104,29 +104,18 @@ void Watching::watching() {
 
             long long int sumIntern = 0;
             long long int sumExtern = 0;
-            std::map<TopConnectionIdentifier, long long int> topConnections;
-            std::map<TopConnectionIdentifier, long long int> topContent;
+            std::map<SumConnectionIdentifier, long long int> sumConnections;
             std::map<int, long long int>::iterator iter = current->traffic->begin();
             while (iter != current->traffic->end()) {
                 allConnections_mutex.lock();
                 Connection* connection = allConnections[iter->first];
                 allConnections_mutex.unlock();
-                TopConnectionIdentifier id = TopConnectionIdentifier(connection);
-                id.text = connection->process;
-                std::map<TopConnectionIdentifier, long long int>::iterator iterTop;
-                if ((iterTop = topConnections.find(id)) != topConnections.end()) {
-                    iterTop->second += iter->second;
+                SumConnectionIdentifier id = SumConnectionIdentifier(connection);
+                std::map<SumConnectionIdentifier, long long int>::iterator iterSum;
+                if ((iterSum = sumConnections.find(id)) != sumConnections.end()) {
+                    iterSum->second += iter->second;
                 } else {
-                    topConnections[id] = iter->second;
-                }
-                if (!connection->content.empty()) {
-                    id.text = connection->content;
-                    std::map<TopConnectionIdentifier, long long int>::iterator iterContent = topContent.find(id);
-                    if (iterContent != topContent.end()) {
-                        iterContent->second += iter->second;
-                    } else {
-                        topConnections[id] = iter->second;
-                    }
+                    sumConnections[id] = iter->second;
                 }
                 if (connection->intern) {
                     sumIntern += iter->second;
@@ -137,24 +126,22 @@ void Watching::watching() {
             }
             delete current;
             
-            std::map<TopConnectionIdentifier, long long int>::const_iterator it=topConnections.begin();
-            while (it!=topConnections.end()) {
+            std::map<SumConnectionIdentifier, long long int>::const_iterator it=sumConnections.begin();
+            while (it!=sumConnections.end()) {
                 if (it->first.inbound) {
-                    logfile->log(3, "%lli %s > %d (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
-                            it->first.text.c_str());
+                    logfile->log(3, "%lli %s > %d (%s) (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
+                            it->first.process.c_str(), it->first.content.c_str());
                 } else {
-                    logfile->log(3, "%lli > %s:%d (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
-                            it->first.text.c_str());
+                    logfile->log(3, "%lli > %s:%d (%s) (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
+                            it->first.process.c_str(), it->first.content.c_str());
                 }
                 if (mysql_connection != NULL) {
                     mysql_connection->insertConnection(buff, 300, it->first.ip.c_str(), it->first.dst_port,
-                            it->first.protocol, it->first.text.c_str(), it->second, it->first.inbound ? 1 : 0,
-                            it->first.intern ? 1 : 0);
+                            it->first.protocol, it->first.process.c_str(), it->first.content.c_str(), it->second, 
+                            it->first.inbound ? 1 : 0, it->first.intern ? 1 : 0);
                 }
-                statistics->insert(statsbuff, it->first.dst_port, it->first.protocol, it->first.intern, 
-                        it->first.inbound, it->second);
-                statistics->insert(statsbuff, 0, 255, it->first.intern, it->first.inbound, it->second);
-                it = topConnections.erase(it);
+                statistics->insert(statsbuff, it->first, it->second);
+                it = sumConnections.erase(it);
             }
             
             logfile->log(3, "%s: (%lli / %lli)", buff, sumIntern, sumExtern);
@@ -162,22 +149,6 @@ void Watching::watching() {
             if (mysql_connection != NULL) {
                 mysql_connection->insertBandwidth(buff, 300, sumIntern, 1);
                 mysql_connection->insertBandwidth(buff, 300, sumExtern, 0);
-            }
-            std::map<TopConnectionIdentifier, long long int>::iterator iCon = topContent.begin();
-            while (iCon != topContent.end()) {
-                if (it->first.inbound) {
-                    logfile->log(3, "%lli %s > %d (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
-                            it->first.text.c_str());
-                } else {
-                    logfile->log(3, "%lli > %s:%d (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
-                            it->first.text.c_str());
-                }
-                if (mysql_connection != NULL) {
-                    mysql_connection->insertContent(buff, 300, it->first.ip.c_str(), it->first.dst_port,
-                            it->first.protocol, it->first.text.c_str(), it->second, it->first.inbound ? 1 : 0,
-                            it->first.intern ? 1 : 0);
-                }
-                iCon = topContent.erase(iCon);
             }
         }
         

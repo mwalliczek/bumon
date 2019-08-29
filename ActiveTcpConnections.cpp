@@ -249,7 +249,8 @@ void ActiveTcpConnections<IP>::checkTimeout() {
 			}
 				
         	        if (connection->inbound && connection->alreadyRunning == false && logfile->checkLevel(2)) {
-			    logfile->log(2, "aborted connection from %s (%s)", connection->ip.c_str(), iter->first.toString().c_str());
+			    logfile->log(2, "aborted connection from %s (%s)", connection->ip->toString().c_str(), 
+			    iter->first.toString().c_str());
 		        }
         	        iter = this->map.erase(iter);
         	        connection->stop();

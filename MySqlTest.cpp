@@ -21,19 +21,45 @@
 #include "bumon.h"
 #include "MySql.h"
 
+std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
 class MySqlTest : public CPPUNIT_NS::TestFixture
 {
  CPPUNIT_TEST_SUITE( MySqlTest );
+ CPPUNIT_TEST( testConnections );
  CPPUNIT_TEST( testStats );
- CPPUNIT_TEST( testLookupTopHostsWithBandwidth );
  CPPUNIT_TEST_SUITE_END();
 
  public:
+  void testConnections();
   void testStats();
-  void testLookupTopHostsWithBandwidth();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( MySqlTest );
+
+void MySqlTest::testConnections() {
+  MySql* sut = new MySql((char *)"localhost", (char *)"bumondb", (char *)"testuser", (char *)"testpwd");
+  sut->insertConnection((char *)"2019-08-01 17:00:00", 300, "192.168.1.1", 80, 1, (char *)"", (char *)"", 100, 0, 0);
+  
+  std::string result = exec("mysql -u testuser --password=testpwd bumondb -e \"SELECT * FROM connections\"");
+  CPPUNIT_ASSERT(result != "");
+
+  sut->cleanupConnections(-1);
+  delete sut;
+  result = exec("mysql -u testuser --password=testpwd bumondb -e \"SELECT * FROM connections\"");
+  CPPUNIT_ASSERT(result == "");
+}
 
 void MySqlTest::testStats() {
   MySql* sut = new MySql((char *)"localhost", (char *)"bumondb", (char *)"testuser", (char *)"testpwd");
@@ -52,17 +78,9 @@ void MySqlTest::testStats() {
   
   delete result;
   
-  delete sut;
-}
-
-void MySqlTest::testLookupTopHostsWithBandwidth() {
-  MySql* sut = new MySql((char *)"localhost", (char *)"bumondb", (char *)"testuser", (char *)"testpwd");
-  
-  sut->insertConnection((char*)"2019-07-01 15:10:00", 300, (char*)"10.1.2.3", 80, IPPROTO_TCP, (char*)"", 2048, 1, 0);
-  
-  std::vector<HostWithBandwidth>* result = sut->lookupTopHostsWithBandwidth((char*)"2019-07-01 15:00:00", 80, IPPROTO_TCP, 1);
-  CPPUNIT_ASSERT(result->size() > 0);
-  std::cout << "result[0] = " << (*result)[0].host << std::endl;
+  sut->cleanupStats(1);
+  result = sut->lookupStats((char*)"2019-07-01 14:00:00", 80, IPPROTO_TCP, true, false);
+  CPPUNIT_ASSERT(result->size() == 0);
   
   delete result;
   

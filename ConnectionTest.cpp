@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-#include <arpa/inet.h>
-
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "Connection.h"
 
+#include "Ipv4Addr.h"
 #include "bumon.h"
 
 class ConnectionTest : public CPPUNIT_NS::TestFixture
@@ -88,11 +87,11 @@ const unsigned char good_data_1[] = {
 #define TESTSTRING "GET / HTTP/1.1\r\nUser-Agent: check_http/v2.2 (monitoring-plugins 2.2)\r\nConnection: close\r\nHost: test.example.com\r\n\r\n"
 
 void ConnectionTest::testHandleData() {
- Connection *test = new Connection("10.50.1.1", 80, 6, "", true, true);
+ Connection *test = new Connection(std::shared_ptr<IpAddr>(new Ipv4Addr("10.50.1.1")), 80, 6, "", true, true);
  test->handleData(160, (const u_char*) TESTSTRING, sizeof(TESTSTRING));
  CPPUNIT_ASSERT(test->content == "test.example.com");
  delete test;
- test = new Connection("10.50.1.1", 443, 6, "", true, true);
+ test = new Connection(std::shared_ptr<IpAddr>(new Ipv4Addr("10.50.1.1")), 443, 6, "", true, true);
  test->handleData(160, good_data_1, sizeof(good_data_1));
  CPPUNIT_ASSERT(test->content == "localhost");
  delete test;

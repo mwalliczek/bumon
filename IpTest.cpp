@@ -88,7 +88,7 @@ void ipTest::testPing() {
     CPPUNIT_ASSERT(allConnections.size() == 1);
     Connection* con = allConnections.begin()->second;
     CPPUNIT_ASSERT(con->protocol == 1);
-    CPPUNIT_ASSERT(con->ip == "127.0.0.1");
+    CPPUNIT_ASSERT(con->ip->toString() == "127.0.0.1");
     delete con;
     allConnections.clear();
     delete ip;
@@ -102,7 +102,7 @@ void ipTest::testSyn() {
     CPPUNIT_ASSERT(allConnections.size() == 1);
     Connection* con = allConnections.begin()->second;
     CPPUNIT_ASSERT(con->protocol == 6);
-    CPPUNIT_ASSERT(con->ip == "10.69.1.1");
+    CPPUNIT_ASSERT(con->ip->toString() == "10.69.1.1");
     CPPUNIT_ASSERT(con->intern == true);
     CPPUNIT_ASSERT(con->inbound == false);
     delete con;
@@ -118,7 +118,7 @@ void ipTest::testUdp() {
     CPPUNIT_ASSERT(allConnections.size() == 1);
     Connection* con = allConnections.begin()->second;
     CPPUNIT_ASSERT(con->protocol == 17);
-    CPPUNIT_ASSERT(con->ip == "10.69.1.1");
+    CPPUNIT_ASSERT(con->ip->toString() == "10.69.1.1");
     CPPUNIT_ASSERT(con->intern == true);
     CPPUNIT_ASSERT(con->inbound == false);
     CPPUNIT_ASSERT(con->dst_port == 53);

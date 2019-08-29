@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-#ifndef TOPCONNECTIONIDENTIFIER_H
-#define TOPCONNECTIONIDENTIFIER_H
+#ifndef SUMCONNECTIONIDENTIFIER_H
+#define SUMCONNECTIONIDENTIFIER_H
 
 #include "Connection.h"
 
-class TopConnectionIdentifier {
+class SumConnectionIdentifier {
 public:
-    TopConnectionIdentifier(Connection* c);
+    SumConnectionIdentifier(Connection* c);
     bool intern;
     bool inbound;
+    std::shared_ptr<IpAddr> ipAddr;
     std::string ip;
     u_short dst_port;
     u_char protocol;
-    std::string text;
+    std::string process;
+    std::string content;
     
-    friend bool operator<(const TopConnectionIdentifier &c1, const TopConnectionIdentifier &c2);
+    friend bool operator<(const SumConnectionIdentifier &c1, const SumConnectionIdentifier &c2);
 };
 
 #endif

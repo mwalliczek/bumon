@@ -23,25 +23,23 @@
 
 #include "Statistics.h"
 
-struct HostWithBandwidth {
-    std::string host;
-    long long int bytes;
-};
-
 const char* protocolName(short protocol);
 
 class MySql {
     MYSQL *mysql_connection;
-    MYSQL_STMT *mysql_stmt_bandwidth, *mysql_stmt_connections, *mysql_stmt_content, *mysql_stmt_insert_stats,
-        *mysql_stmt_select_stats, *mysql_stmt_select_hosts, *mysql_stmt_number_stats;
+    MYSQL_STMT *mysql_stmt_bandwidth;
+    MYSQL_STMT *mysql_stmt_connections;
+    MYSQL_STMT *mysql_stmt_insert_stats;
+    MYSQL_STMT *mysql_stmt_select_stats;
+    MYSQL_STMT *mysql_stmt_number_stats;
+    MYSQL_STMT *mysql_stmt_cleanup_connections;
+    MYSQL_STMT *mysql_stmt_cleanup_stats;
 
     char* mysql_host;
     char* mysql_db;
     char* mysql_username;
     char* mysql_password;
     
-    void insertConnectionAndContent(MYSQL_STMT* mysql_stmt, char* buff, short duration, const char* foreign_ip,
-        int dst_port, short protocol, const char* text, long long int bytes, short inbound, short intern);
     void init();
     void destroy();
         
@@ -53,13 +51,12 @@ class MySql {
         
         void insertBandwidth(char* buff, short duration, long long int sum, short intern);
         void insertConnection(char* buff, short duration, const char* foreign_ip, int dst_port, short protocol,
-            const char* text, long long int bytes, short inbound, short intern);
-        void insertContent(char* buff, short duration, const char* foreign_ip, int dst_port, short protocol,
-            const char* text, long long int bytes, short inbound, short intern);
+            const char* process, const char* content, long long int bytes, short inbound, short intern);
         void insertStats(char* buff, Statistics* stat);
         std::vector<long long int>* lookupStats(char* buff, int dst_port, int protocol, bool intern, bool inbound);
-        std::vector<HostWithBandwidth>* lookupTopHostsWithBandwidth(char* buff, int dst_port, int protocol, bool inbound);
         int lookupNumberStats(char* buff);
+        void cleanupConnections(int days);
+        void cleanupStats(int months);
 };
 
 #endif

@@ -28,7 +28,7 @@
 static std::default_random_engine generator;
 static std::uniform_int_distribution<int> distribution(INT_MIN, INT_MAX);
 
-Connection::Connection(std::string ip, u_char protocol, bool inbound, bool intern):
+Connection::Connection(std::shared_ptr<IpAddr> ip, u_char protocol, bool inbound, bool intern):
 	ip(ip), protocol(protocol), inbound(inbound), intern(intern) {
     time(&begin);
     dst_port = 0;
@@ -43,7 +43,7 @@ Connection::Connection(std::string ip, u_char protocol, bool inbound, bool inter
     allConnections[id] = this;
 }
 
-Connection::Connection(std::string ip, u_short dst_port, u_char protocol, std::string process, bool inbound, 
+Connection::Connection(std::shared_ptr<IpAddr> ip, u_short dst_port, u_char protocol, std::string process, bool inbound, 
 	bool intern): Connection(ip, protocol, inbound, intern) {
     this->dst_port = dst_port;
     this->process = process;

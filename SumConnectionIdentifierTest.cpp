@@ -18,11 +18,13 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "TopConnectionIdentifier.h"
+#include "SumConnectionIdentifier.h"
 
-class TopConnectionIdentifierTest : public CPPUNIT_NS::TestFixture
+#include "Ipv4Addr.h"
+
+class SumConnectionIdentifierTest : public CPPUNIT_NS::TestFixture
 {
- CPPUNIT_TEST_SUITE( TopConnectionIdentifierTest );
+ CPPUNIT_TEST_SUITE( SumConnectionIdentifierTest );
  CPPUNIT_TEST( test );
  CPPUNIT_TEST_SUITE_END();
 
@@ -30,13 +32,13 @@ class TopConnectionIdentifierTest : public CPPUNIT_NS::TestFixture
   void test();
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( TopConnectionIdentifierTest );
+CPPUNIT_TEST_SUITE_REGISTRATION( SumConnectionIdentifierTest );
 
-void TopConnectionIdentifierTest::test() {
-    Connection *aCon = new Connection("10.31.1.100", 80, 6, "", true, true);
-    TopConnectionIdentifier a = TopConnectionIdentifier(aCon);
-    Connection *bCon = new Connection("10.69.1.1", 80, 6, "", true, true);
-    TopConnectionIdentifier b = TopConnectionIdentifier(bCon);
+void SumConnectionIdentifierTest::test() {
+    Connection *aCon = new Connection(std::shared_ptr<IpAddr>(new Ipv4Addr("10.31.1.100")), 80, 6, "", true, true);
+    SumConnectionIdentifier a = SumConnectionIdentifier(aCon);
+    Connection *bCon = new Connection(std::shared_ptr<IpAddr>(new Ipv4Addr("10.69.1.1")), 80, 6, "", true, true);
+    SumConnectionIdentifier b = SumConnectionIdentifier(bCon);
     CPPUNIT_ASSERT(a<b);
     CPPUNIT_ASSERT(!(b<a));
     delete aCon;

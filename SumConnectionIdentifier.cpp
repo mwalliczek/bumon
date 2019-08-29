@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-#include "TopConnectionIdentifier.h"
+#include "SumConnectionIdentifier.h"
 
-TopConnectionIdentifier::TopConnectionIdentifier(Connection* c):
-    intern(c->intern), inbound(c->inbound), ip(c->ip), dst_port(c->dst_port), protocol(c->protocol) { }
+SumConnectionIdentifier::SumConnectionIdentifier(Connection* c):
+    intern(c->intern), inbound(c->inbound), ipAddr(c->ip), ip(c->ip->toString()), dst_port(c->dst_port), 
+    protocol(c->protocol), process(c->process), content(c->content) { }
 
-bool operator<(const TopConnectionIdentifier &c1, const TopConnectionIdentifier &c2) {
+bool operator<(const SumConnectionIdentifier &c1, const SumConnectionIdentifier &c2) {
     if (c1.intern && !c2.intern) {
         return true;
     }
@@ -50,7 +51,13 @@ bool operator<(const TopConnectionIdentifier &c1, const TopConnectionIdentifier 
     if (c1.ip > c2.ip) {
         return false;
     }
-    if (c1.text < c2.text) {
+    if (c1.process < c2.process) {
+        return true;
+    }
+    if (c1.process > c2.process) {
+        return false;
+    }
+    if (c1.content < c2.content) {
         return true;
     }
     return false;
