@@ -42,6 +42,8 @@ class Stats {
     MySql* mysql_connection;
     char* sender;
     char* recipient;
+    int expireConnections;
+    int expireStats;
     
     std::string checkSpike(const char *statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum);
     void sendMail(std::map<std::string, std::string>* messages);
@@ -49,7 +51,7 @@ class Stats {
     std::vector<TopHosts> lookupTopHosts(const char *statsbuff, int dst_port, int protocol, bool intern, bool inbound);
     
     public:
-        Stats(MySql* mysql_connection, char* sender, char* recipient);
+        Stats(MySql* mysql_connection, char* sender, char* recipient, int expireConnections, int expireStats);
         void cleanup(char *statsbuff);
         void insert(char *statsbuff, SumConnectionIdentifier sumConnectionIdentifier, long long int sum);
 };

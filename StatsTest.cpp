@@ -36,7 +36,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( StatsTest );
 void StatsTest::testCheckSpike() {
  MySql* mysql = new MySql((char *)"localhost", (char *)"bumondb", (char *)"testuser", (char *)"testpwd");
  
- Stats* sut = new Stats(mysql, (char *)"root", (char *)"nobody");
+ Stats* sut = new Stats(mysql, (char *)"root", (char *)"nobody", -1, -1);
  
  Connection* con1 = new Connection(std::shared_ptr<IpAddr>(new Ipv4Addr("192.168.1.1")), 80, IPPROTO_TCP, "process", false, false);
  SumConnectionIdentifier id = SumConnectionIdentifier(con1);

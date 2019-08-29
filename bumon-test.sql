@@ -42,7 +42,7 @@ CREATE TABLE `connections` (
   `duration` int(11) DEFAULT NULL,
   `foreign_ip` mediumtext DEFAULT NULL,
   `dst_port` int(11) DEFAULT NULL,
-  `protocol` varchar(3) DEFAULT NULL,
+  `protocol` varchar(10) NOT NULL,
   `process` mediumtext DEFAULT NULL,
   `content` mediumtext DEFAULT NULL,
   `bytes` bigint(20) DEFAULT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE `stats` (
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `duration` int(11) DEFAULT NULL,
   `dst_port` int(11) DEFAULT NULL,
-  `protocol` varchar(3) DEFAULT NULL,
+  `protocol` varchar(10) NOT NULL,
   `bytes` bigint(20) DEFAULT NULL,
   `inbound` tinyint(4) DEFAULT NULL,
   `intern` tinyint(4) DEFAULT NULL

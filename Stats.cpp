@@ -21,7 +21,9 @@
 
 #include "bumon.h"
 
-Stats::Stats(MySql* mysql_connection, char* sender, char* recipient): mysql_connection(mysql_connection), sender(sender), recipient(recipient) { }
+Stats::Stats(MySql* mysql_connection, char* sender, char* recipient, int expireConnections, int expireStats): 
+        mysql_connection(mysql_connection), sender(sender), recipient(recipient), expireConnections(expireConnections), 
+        expireStats(expireStats) { }
 
 std::string generateMessagesId(std::map<std::string, Statistics*>::iterator statsIter) {
     std::stringstream messagesId;
@@ -102,6 +104,12 @@ void Stats::cleanup(char *statsbuff) {
         } else {
             topHostsIter++;
         }
+    }
+    if (expireConnections != -1) {
+        mysql_connection->cleanupConnections(expireConnections);
+    }
+    if (expireStats != -1) {
+        mysql_connection->cleanupStats(expireStats);
     }
 }
 
@@ -187,9 +195,9 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
                         if (!pac->content.empty()) {
                             message += " (" + pac->content + ")";
                         }
-                        message += "\n";
+                        message += ": " + formatBandwidth(pac->sum) + "\n";
                     }
-                    if (topHostCount++ == 3) {
+                    if (++topHostCount == 3) {
                         break;
                     }
                 }
