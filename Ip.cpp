@@ -197,14 +197,19 @@ void Ip::handleV4(const u_char *packet) {
 	/* determine protocol */	
 	switch(ipv4->ip_p) {
 		case IPPROTO_TCP:
-			activev4TcpConnections->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), &packet[size_ip], size_ip);
+			activev4TcpConnections->handlePacket(Ipv4Addr(ipv4->ip_src), Ipv4Addr(ipv4->ip_dst), 
+				ntohs(ipv4->ip_len), &packet[size_ip], size_ip);
 			break;
 		case IPPROTO_UDP:
-			activev4UdpConnections->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), &packet[size_ip]);
+			activev4UdpConnections->handlePacket(Ipv4Addr(ipv4->ip_src), Ipv4Addr(ipv4->ip_dst), 
+				ntohs(ipv4->ip_len), &packet[size_ip]);
 			break;
 		default:
-			logfile->log(2, " %s > %s Protocol: unknown (%d)", Ipv4Addr(ipv4->ip_src).toString().c_str(), Ipv4Addr(ipv4->ip_dst).toString().c_str(), ipv4->ip_p);
-			otherv4->handlePacket(ipv4->ip_src, ipv4->ip_dst, ntohs(ipv4->ip_len), ipv4->ip_p);
+			Ipv4Addr src = Ipv4Addr(ipv4->ip_src);
+			Ipv4Addr dst = Ipv4Addr(ipv4->ip_dst);
+			logfile->log(2, " %s > %s Protocol: unknown (%d)", src.toString().c_str(),
+				dst.toString().c_str(), ipv4->ip_p);
+			otherv4->handlePacket(src, dst, ntohs(ipv4->ip_len), ipv4->ip_p);
 			return;
 	}
 }

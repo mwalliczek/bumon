@@ -26,9 +26,8 @@ class Ipv6Addr : public IpAddr {
     struct in6_addr ip;
     Ipv6Addr();
 public:
-    Ipv6Addr(struct in6_addr ip);
-    Ipv6Addr(std::string ip);
-    Ipv6Addr(const Ipv6Addr& ip);
+    explicit Ipv6Addr(struct in6_addr ip);
+    explicit Ipv6Addr(std::string ip);
     std::string toString() const;
     std::string resolve() const;
     bool empty() const;

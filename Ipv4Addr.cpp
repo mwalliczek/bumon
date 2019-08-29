@@ -37,8 +37,6 @@ Ipv4Addr::Ipv4Addr(std::string ip) {
     } 
 }
 
-Ipv4Addr::Ipv4Addr(const Ipv4Addr& ip): ip(ip.ip) { }
-
 bool Ipv4Addr::empty() const {
     return 0 == ip.s_addr;
 }
