@@ -40,8 +40,8 @@ class Stats {
     std::map<std::string, TopHosts*> topHosts;
     std::string lastStatsTimestamp;
     MySql* mysql_connection;
-    char* sender;
-    char* recipient;
+    const char* sender;
+    const char* recipient;
     int expireConnections;
     int expireStats;
     
@@ -51,9 +51,10 @@ class Stats {
     std::vector<TopHosts> lookupTopHosts(const char *statsbuff, int dst_port, int protocol, bool intern, bool inbound);
     
     public:
-        Stats(MySql* mysql_connection, char* sender, char* recipient, int expireConnections, int expireStats);
+        Stats(MySql* mysql_connection, const char* sender, const char* recipient, int expireConnections, 
+                int expireStats);
         void cleanup(char *statsbuff);
-        void insert(char *statsbuff, SumConnectionIdentifier sumConnectionIdentifier, long long int sum);
+        void insert(char *statsbuff, SumConnectionIdentifier const & sumConnectionIdentifier, long long int sum);
 };
 
 #endif

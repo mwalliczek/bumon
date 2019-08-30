@@ -51,7 +51,7 @@ void ActiveUdpConnectionsTest::testAddOutbound() {
  CPPUNIT_ASSERT(allConnections.size() == 1);
  Connection* con = allConnections.begin()->second;
  CPPUNIT_ASSERT(con != NULL);
- CPPUNIT_ASSERT(con->dst_port == 16450);
+ CPPUNIT_ASSERT(con->dst_port == 1500);
  
  watching->watching();
  CPPUNIT_ASSERT(allConnections.size() == 1);

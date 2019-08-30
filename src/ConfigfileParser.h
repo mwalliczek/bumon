@@ -34,6 +34,7 @@ private:
     bool handleSelf(std::string val);
 public:
     ConfigfileParser(std::string configFile);
+    std::string findOption(std::string key, std::string defaultValue = std::string()) const;
     std::map<std::string, std::string> options;
     std::list<IpAndMask> interns;
     std::list<std::string> selfs;

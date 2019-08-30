@@ -41,6 +41,8 @@ void ConfigfileParserTest::testAll() {
 
  ConfigfileParser* underTest = new ConfigfileParser("testConfig.conf");
  CPPUNIT_ASSERT(underTest->options["device"] == "eth0");
+ CPPUNIT_ASSERT(underTest->findOption("device") == "eth0");
+ CPPUNIT_ASSERT(underTest->findOption("foo", "bar") == "bar");
  CPPUNIT_ASSERT(underTest->interns.size() == 2);
  CPPUNIT_ASSERT(underTest->selfs.size() == 1);
  CPPUNIT_ASSERT(underTest->selfs.front() == "10.31.1.100");

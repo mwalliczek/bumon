@@ -27,9 +27,13 @@
 #include "SumConnectionIdentifier.h"
 
 void callWatching(Watching* watching) {
+    int sleepTime = 0;
     while (watching->doWatch) {
-        sleep(10);
-        watching->watching();
+        if (++sleepTime == 10) {
+            watching->watching();
+            sleepTime = 0;
+        }
+        sleep(1);
     }
 }
 
@@ -54,7 +58,7 @@ void Watching::initMySQL(char* mysql_host, char* mysql_db, char* mysql_username,
 }
 
 Watching::Watching(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password, 
-        char* warning_main_sender, char* warning_main_recipient, int expireConnections, int expireStats) {
+        const char* warning_main_sender, const char* warning_main_recipient, int expireConnections, int expireStats) {
     if (debug) {
         logfile->log(11, "Start Watching: %s %s %s %s\n", mysql_host, mysql_db, mysql_username, mysql_password);
     }

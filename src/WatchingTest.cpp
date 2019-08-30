@@ -87,7 +87,7 @@ void WatchingTest::testIntegration() {
  time(&current);
  
  Watching* sut = new Watching((char *)"localhost", (char *)"bumondb", (char *)"testuser", (char *)"testpwd", 
-         (char *)"root", (char *)"nobody", -1, -1);
+         "root", "nobody", -1, -1);
  
  sut->addHistory(current, traffic1);
  sut->watching();

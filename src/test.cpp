@@ -43,13 +43,14 @@ std::mutex allConnections_mutex;
 Logfile* logfile;
 bool debug = true;
 std::string ssPath = "./ssMock";
-std::string sendmailPath = "echo > /dev/null";
+std::string sendmailPath = "cat > sendmail.txt";
 
 int main (int argc, char* argv[])
 {
     logfile = new Logfile("", 11);
     watching = new WatchingMock();
     findProcesses = new FindProcess();
+    findProcesses->init();
     trafficManager = new TrafficManager();
     
     // Informiert Test-Listener ueber Testresultate

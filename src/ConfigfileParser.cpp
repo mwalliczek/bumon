@@ -110,3 +110,11 @@ ConfigfileParser::ConfigfileParser(std::string configFile)
     }
     cfgfile.close();
 }
+
+std::string ConfigfileParser::findOption(std::string key, std::string defaultValue) const {
+    auto iter = options.find(key);
+    if (iter != options.end()) {
+        return iter->second;
+    }
+    return defaultValue;
+}

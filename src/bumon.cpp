@@ -130,16 +130,19 @@ bool debug;
 std::string ssPath = "ss";
 std::string sendmailPath = "/usr/lib/sendmail -t";
 
+pcap_t *handle;				/* packet capture handle */
+
 void signalHandler( int signum ) {
     if (SIGHUP == signum) {
         logfile->hup();
+    } else if (SIGINT == signum) {
+        pcap_breakloop(handle);
     }
 }
 
 int main(int argc, char *argv[])
 {
     char errbuf[PCAP_ERRBUF_SIZE];
-    pcap_t *handle;				/* packet capture handle */
     
     int c = 0;
     char* configPath = NULL;
@@ -173,39 +176,19 @@ int main(int argc, char *argv[])
         config = new ConfigfileParser(configPath);
     
         std::map<std::string, std::string>::iterator configIter;
-        if ((configIter = config->options.find("logfile")) != config->options.end()) {
-            logfilePath = configIter->second;
-        }
+        logfilePath = config->findOption("logfile");
         if ((configIter = config->options.find("loglevel")) != config->options.end()) {
             logLevel = std::stoi(configIter->second);
         }
-        if ((configIter = config->options.find("mysql_host")) != config->options.end()) {
-            mysql_host = configIter->second;
-        }
-        if ((configIter = config->options.find("mysql_username")) != config->options.end()) {
-            mysql_user = configIter->second;
-        }
-        if ((configIter = config->options.find("mysql_password")) != config->options.end()) {
-            mysql_pass = configIter->second;
-        }
-        if ((configIter = config->options.find("mysql_db")) != config->options.end()) {
-            mysql_db = configIter->second;
-        }
-        if ((configIter = config->options.find("device")) != config->options.end()) {
-            dev = configIter->second;
-        }
-        if ((configIter = config->options.find("ssPath")) != config->options.end()) {
-            ssPath = configIter->second;
-        }
-        if ((configIter = config->options.find("sendmailPath")) != config->options.end()) {
-            sendmailPath = configIter->second;
-        }
-        if ((configIter = config->options.find("warning_mail_sender")) != config->options.end()) {
-            warning_mail_sender = configIter->second;
-        }
-        if ((configIter = config->options.find("warning_mail_recipient")) != config->options.end()) {
-            warning_mail_recipient = configIter->second;
-        }
+        mysql_host = config->findOption("mysql_host");
+        mysql_user = config->findOption("mysql_username");
+        mysql_pass = config->findOption("mysql_password");
+        mysql_db = config->findOption("mysql_db");
+        dev = config->findOption("device", dev);
+        ssPath = config->findOption("ssPath");
+        sendmailPath = config->findOption("sendmailPath");
+        warning_mail_sender = config->findOption("warning_mail_sender");
+        warning_mail_recipient = config->findOption("warning_mail_recipient");
         if ((configIter = config->options.find("expire_connections")) != config->options.end()) {
             expireConnections = std::stoi(configIter->second);
         }
@@ -213,8 +196,6 @@ int main(int argc, char *argv[])
             expireStats = std::stoi(configIter->second);
         }
     }
-    logfile = new Logfile(logfilePath, logLevel);
-
     if (dev.empty()) {
         char *defaultDev = pcap_lookupdev(errbuf);
         if (NULL == defaultDev) {
@@ -233,13 +214,15 @@ int main(int argc, char *argv[])
             return(2);
     }
     
+    logfile = new Logfile(logfilePath, logLevel);
+
     findProcesses = new FindProcess();
     findProcesses->init();
     
     if (!mysql_host.empty() && !mysql_user.empty() && !mysql_pass.empty() && !mysql_db.empty()) {
         watching = new Watching((char *) mysql_host.c_str(), (char *) mysql_db.c_str(), (char *) mysql_user.c_str(), 
-                (char *) mysql_pass.c_str(), (char *) warning_mail_sender.c_str(), 
-                (char *) warning_mail_recipient.c_str(), expireConnections, expireStats);
+                (char *) mysql_pass.c_str(), warning_mail_sender.c_str(), warning_mail_recipient.c_str(), 
+                expireConnections, expireStats);
     } else {
         watching = new Watching(true);
     }
@@ -248,10 +231,18 @@ int main(int argc, char *argv[])
     ip = new Ip(config);
     
     signal(SIGHUP, signalHandler);
+    signal(SIGINT, signalHandler);
     
     /* now we can set our callback function */
     pcap_loop(handle, -1, Ip::got_packet, (u_char*) ip);
     
     pcap_close(handle);
+    
+    delete watching;
+    delete ip;
+    delete trafficManager;
+    delete findProcesses;
+    delete logfile;
+    
     return(0);
 }

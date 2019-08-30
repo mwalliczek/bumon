@@ -21,9 +21,9 @@
 
 #include "bumon.h"
 
-Stats::Stats(MySql* mysql_connection, char* sender, char* recipient, int expireConnections, int expireStats): 
-        mysql_connection(mysql_connection), sender(sender), recipient(recipient), expireConnections(expireConnections), 
-        expireStats(expireStats) { }
+Stats::Stats(MySql* mysql_connection, const char* sender, const char* recipient, int expireConnections, 
+        int expireStats): mysql_connection(mysql_connection), sender(sender), recipient(recipient), 
+        expireConnections(expireConnections), expireStats(expireStats) { }
 
 std::string generateMessagesId(std::map<std::string, Statistics*>::iterator statsIter) {
     std::stringstream messagesId;
@@ -111,6 +111,7 @@ void Stats::cleanup(char *statsbuff) {
     if (expireStats != -1) {
         mysql_connection->cleanupStats(expireStats);
     }
+    findProcesses->init();
 }
 
 std::string formatBandwidth(long long int sum) {
@@ -214,7 +215,7 @@ std::stringstream generateId(const char *statsbuff, int dst_port, int protocol, 
     return result;
 }
 
-std::string generateTopHostsId(char *statsbuff, SumConnectionIdentifier sumConnectionIdentifier) {
+std::string generateTopHostsId(char *statsbuff, SumConnectionIdentifier const & sumConnectionIdentifier) {
     std::stringstream result = generateId(statsbuff, sumConnectionIdentifier.dst_port, 
         sumConnectionIdentifier.protocol, sumConnectionIdentifier.intern, sumConnectionIdentifier.inbound);
     result << " " << sumConnectionIdentifier.ip;
@@ -254,7 +255,7 @@ void Stats::insertStats(char *statsbuff, int dst_port, int protocol, bool intern
 }
 
 
-void Stats::insert(char *statsbuff, SumConnectionIdentifier sumConnectionIdentifier, long long int sum) {
+void Stats::insert(char *statsbuff, SumConnectionIdentifier const & sumConnectionIdentifier, long long int sum) {
     lastStatsTimestamp = std::string(statsbuff);
     insertStats(statsbuff, 0, 255, sumConnectionIdentifier.intern, sumConnectionIdentifier.inbound, sum);
     insertStats(statsbuff, sumConnectionIdentifier.dst_port, sumConnectionIdentifier.protocol, 
