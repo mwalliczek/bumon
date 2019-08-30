@@ -20,12 +20,15 @@
 #include "ConfigfileParser.h"
 #include "ActiveTcpConnections.h"
 #include "ActiveUdpConnections.h"
+#include "ICMP.h"
 #include "Ipv4Addr.h"
 #include "Ipv6Addr.h"
 
 class Ip {
     ActiveConnections<Ipv4Addr> *otherv4;
     ActiveConnections<Ipv6Addr> *otherv6;
+    ICMP<Ipv4Addr> *icmpv4;
+    ICMP<Ipv6Addr> *icmpv6;
     void handleV4(const u_char *packet);
 protected:
     ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections;
@@ -34,8 +37,7 @@ protected:
     ActiveUdpConnections<Ipv6Addr> *activev6UdpConnections;
     Ip(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, ActiveTcpConnections<Ipv6Addr> *activev6TcpConnections,
             ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections, 
-            ActiveUdpConnections<Ipv6Addr> *activev6UdpConnections, ActiveConnections<Ipv4Addr> *otherv4, 
-            ActiveConnections<Ipv6Addr> *otherv6);
+            ActiveUdpConnections<Ipv6Addr> *activev6UdpConnections);
 
 public:
     explicit Ip(ConfigfileParser *configFile);

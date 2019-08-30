@@ -1,12 +1,12 @@
 /*
  * Copyright (c) 2019 Matthias Walliczek
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-#include "IpMock.h"
+#ifndef ICMP_H
+#define ICMP_H
 
-IpMock::IpMock(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, 
-		ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections) : Ip(activev4TcpConnections, NULL,
-		activev4UdpConnections, NULL) { }
+#include "ActiveConnections.h"
 
-void IpMock::checkTimeout() {
-	if (NULL != activev4TcpConnections) {
-		activev4TcpConnections->checkTimeout();
-	}
-	if (NULL != activev4UdpConnections) {
-		activev4UdpConnections->checkTimeout();
-	}
-}
+template<typename IP>
+class ICMP : public ActiveConnections<IP> {
+public:
+    ICMP(std::list<InternNet<IP>> interns, std::list<IP> selfs);
+    void handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, const u_char *packet) const;
+};
+
+#endif

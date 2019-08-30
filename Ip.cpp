@@ -161,26 +161,29 @@ Ip::Ip(ConfigfileParser* config) {
 	}
 	activev4TcpConnections = new ActiveTcpConnections<Ipv4Addr>(internsv4, selfsv4);
 	activev4UdpConnections = new ActiveUdpConnections<Ipv4Addr>(internsv4, selfsv4);
+	icmpv4 = new ICMP<Ipv4Addr>(internsv4, selfsv4);
 	otherv4 = new ActiveConnections<Ipv4Addr>(internsv4, selfsv4);
 	activev6TcpConnections = new ActiveTcpConnections<Ipv6Addr>(internsv6, selfsv6);
 	activev6UdpConnections = new ActiveUdpConnections<Ipv6Addr>(internsv6, selfsv6);
+	icmpv6 = new ICMP<Ipv6Addr>(internsv6, selfsv6);
 	otherv6 = new ActiveConnections<Ipv6Addr>(internsv6, selfsv6);
 }
 
 Ip::Ip(ActiveTcpConnections<Ipv4Addr> *activev4TcpConnections, ActiveTcpConnections<Ipv6Addr> *activev6TcpConnections, 
 	    ActiveUdpConnections<Ipv4Addr> *activev4UdpConnections, 
-	    ActiveUdpConnections<Ipv6Addr> *activev6UdpConnections,
-	    ActiveConnections<Ipv4Addr> *otherv4, ActiveConnections<Ipv6Addr> *otherv6): 
-            otherv4(otherv4), otherv6(otherv6), activev4TcpConnections(activev4TcpConnections),
+	    ActiveUdpConnections<Ipv6Addr> *activev6UdpConnections): 
+            otherv4(NULL), otherv6(NULL), icmpv4(NULL), icmpv6(NULL), activev4TcpConnections(activev4TcpConnections),
             activev6TcpConnections(activev6TcpConnections), activev4UdpConnections(activev4UdpConnections), 
             activev6UdpConnections(activev6UdpConnections) { }
 
 Ip::~Ip() {
 	delete activev4TcpConnections;
 	delete activev4UdpConnections;
+	delete icmpv4;
 	delete otherv4;
 	delete activev6TcpConnections;
 	delete activev6UdpConnections;
+	delete icmpv6;
 	delete otherv6;
 }
 
@@ -203,6 +206,10 @@ void Ip::handleV4(const u_char *packet) {
 		case IPPROTO_UDP:
 			activev4UdpConnections->handlePacket(Ipv4Addr(ipv4->ip_src), Ipv4Addr(ipv4->ip_dst), 
 				ntohs(ipv4->ip_len), &packet[size_ip]);
+			break;
+		case IPPROTO_ICMP:
+			icmpv4->handlePacket(Ipv4Addr(ipv4->ip_src), Ipv4Addr(ipv4->ip_dst), ntohs(ipv4->ip_len), 
+				&packet[size_ip]);
 			break;
 		default:
 			Ipv4Addr src = Ipv4Addr(ipv4->ip_src);
