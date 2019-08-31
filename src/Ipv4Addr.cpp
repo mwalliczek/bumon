@@ -42,7 +42,9 @@ bool Ipv4Addr::empty() const {
 }
 
 std::string Ipv4Addr::toString() const {
-    return std::string(inet_ntoa(ip));
+    char straddr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &ip, straddr, sizeof(straddr));
+    return std::string(straddr);
 }
 
 std::string Ipv4Addr::resolve() const {

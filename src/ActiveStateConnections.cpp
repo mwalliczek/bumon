@@ -20,12 +20,12 @@
 #include "Ipv6Addr.h"
 
 template<typename IP>
-ActiveStateConnections<IP>::ActiveStateConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs):
-    ActiveConnections<IP>(interns, selfs) { }
+ActiveStateConnections<IP>::ActiveStateConnections(std::list<InternNet<IP>> const & interns, 
+        std::list<IP> const & selfs): ActiveConnections<IP>(interns, selfs) { }
 
 template<typename IP>
-Connection* ActiveStateConnections<IP>::createConnection(IP ip_src, int sport, IP ip_dst, int dport, u_char protocol, 
-        const char *logMessage) {
+Connection* ActiveStateConnections<IP>::createConnection(IP const & ip_src, int sport, IP const & ip_dst, int dport, 
+        u_char protocol, const char *logMessage) {
     Connection* connection = this->createSimpleConnection(ip_src, ip_dst, protocol);
     connection->dst_port = dport;
     

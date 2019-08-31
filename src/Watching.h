@@ -37,13 +37,14 @@ class Watching {
     std::thread* thread;
     MySql *mysql_connection;
     Stats* statistics;
-    void initMySQL(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password);
+    void initMySQL(const char* mysql_host, const char* mysql_db, const char* mysql_username, 
+            const char* mysql_password);
     
     public:
         explicit Watching(bool startThread);
-        explicit Watching(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password, 
-                const char* warning_main_sender, const char* warning_main_recipient, int expireConnections, 
-                int expireStats);
+        explicit Watching(const char* mysql_host, const char* mysql_db, const char* mysql_username, 
+                const char* mysql_password, const char* warning_main_sender, const char* warning_main_recipient, 
+                int expireConnections, int expireStats);
         Watching(const Watching&) = delete;
         ~Watching();
         void addHistory(time_t time, std::map<int, long long int>* traffic);

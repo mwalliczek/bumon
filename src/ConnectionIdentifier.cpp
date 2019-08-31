@@ -21,7 +21,7 @@
 #include "Ipv6Addr.h"
 
 template<typename IP>
-ConnectionIdentifier<IP>::ConnectionIdentifier(IP ip_src, int sport, IP ip_dst, int dport):
+ConnectionIdentifier<IP>::ConnectionIdentifier(IP const & ip_src, int sport, IP const & ip_dst, int dport):
         ip_src(ip_src), sport(sport), ip_dst(ip_dst), dport(dport) { }
 
 template<typename IP>

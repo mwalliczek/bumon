@@ -29,13 +29,13 @@ template<typename IP>
 class ActiveConnections {
     std::list<InternNet<IP>> interns;
     std::list<IP> selfs;
-    bool isIntern(IP ip) const;
+    bool isIntern(IP const & ip) const;
 protected:
-    Connection* createSimpleConnection(IP ip_src, IP ip_dst, u_char protocol) const;
-    bool isSelf(IP ip) const;
+    Connection* createSimpleConnection(IP const & ip_src, IP const & ip_dst, u_char protocol) const;
+    bool isSelf(IP const & ip) const;
 public:
-    ActiveConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs);
-    void handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, u_char protocol) const;
+    ActiveConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs);
+    void handlePacket(IP const & ip_src, IP const & ip_dst, uint16_t ip_len, u_char protocol) const;
 };
 
 #endif

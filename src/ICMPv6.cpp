@@ -14,31 +14,31 @@
  * limitations under the License.
  */
 
-#include "ICMP.h"
+#include "ICMPv6.h"
 #include "bumon.h"
 
-ICMP::ICMP(std::list<InternNet<Ipv4Addr>> const & interns, std::list<Ipv4Addr> const & selfs):
-    ActiveConnections<Ipv4Addr>(interns, selfs) { }
+ICMPv6::ICMPv6(std::list<InternNet<Ipv6Addr>> const & interns, std::list<Ipv6Addr> const & selfs):
+    ActiveConnections<Ipv6Addr>(interns, selfs) { }
 
-std::string ICMP::getTypeString(u_char type) const {
+std::string ICMPv6::getTypeString(u_char type) const {
     std::string result = std::to_string(type) + " (";
     switch (type) {
-        case 0:
-            return result + "Echo Reply)";
-        case 3:
+        case 1:
             return result + "Destination Unreachable)"; 
-        case 8:
+        case 128:
+            return result + "Echo Reply)";
+        case 129:
             return result + "Echo Request)";
         default:
             return result + "Unknown)";
     }
 }
 
-void ICMP::handlePacket(Ipv4Addr const & src, Ipv4Addr const & dst, uint16_t ip_len, const u_char *packet) const {
+void ICMPv6::handlePacket(Ipv6Addr const & src, Ipv6Addr const & dst, uint16_t ip_len, const u_char *packet) const {
     std::string typeString = getTypeString(packet[0]);
-    logfile->log(2, " %s > %s ICMP %s %d", src.toString().c_str(),
+    logfile->log(2, " %s > %s ICMPv6 %s %d", src.toString().c_str(),
             dst.toString().c_str(), typeString.c_str(), packet[1]);
-    Connection* connection = this->createSimpleConnection(src, dst, IPPROTO_ICMP);
+    Connection* connection = this->createSimpleConnection(src, dst, IPPROTO_ICMPV6);
     connection->content = typeString;
     connection->handleData(ip_len);
     connection->stop();

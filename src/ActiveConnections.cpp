@@ -20,11 +20,11 @@
 #include "Ipv6Addr.h"
 
 template<typename IP>
-ActiveConnections<IP>::ActiveConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs):
+ActiveConnections<IP>::ActiveConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs):
     interns(interns), selfs(selfs) { }
 
 template<typename IP>
-bool ActiveConnections<IP>::isIntern(IP ip) const {
+bool ActiveConnections<IP>::isIntern(IP const & ip) const {
     for(auto internIter : interns) {
         if (internIter.match(ip)) {
             return true;
@@ -34,7 +34,7 @@ bool ActiveConnections<IP>::isIntern(IP ip) const {
 }
 
 template<typename IP>
-bool ActiveConnections<IP>::isSelf(IP ip) const {
+bool ActiveConnections<IP>::isSelf(IP const & ip) const {
     for(const auto selfIter : selfs) {
         if (selfIter == ip) {
             return true;
@@ -44,14 +44,14 @@ bool ActiveConnections<IP>::isSelf(IP ip) const {
 }
 
 template<typename IP>
-Connection* ActiveConnections<IP>::createSimpleConnection(IP ip_src, IP ip_dst, u_char protocol) const {
+Connection* ActiveConnections<IP>::createSimpleConnection(IP const & ip_src, IP const & ip_dst, u_char protocol) const {
     bool inbound = isSelf(ip_dst);
     bool intern = inbound ? isIntern(ip_src) : isIntern(ip_dst);
     return new Connection(std::shared_ptr<IpAddr>(inbound ? new IP(ip_src) : new IP(ip_dst)), protocol, inbound, intern);
 }
 
 template<typename IP>
-void ActiveConnections<IP>::handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, u_char protocol) const {
+void ActiveConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst, uint16_t ip_len, u_char protocol) const {
     Connection* connection = createSimpleConnection(ip_src, ip_dst, protocol);
     connection->handleData(ip_len);
     connection->stop();

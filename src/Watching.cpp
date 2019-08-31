@@ -53,11 +53,12 @@ Watching::Watching(bool startThread) {
     statistics = new Stats(NULL, NULL, NULL, -1, -1);
 }
 
-void Watching::initMySQL(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password) {
+void Watching::initMySQL(const char* mysql_host, const char* mysql_db, const char* mysql_username, 
+        const char* mysql_password) {
     mysql_connection = new MySql(mysql_host, mysql_db, mysql_username, mysql_password);
 }
 
-Watching::Watching(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password, 
+Watching::Watching(const char* mysql_host, const char* mysql_db, const char* mysql_username, const char* mysql_password, 
         const char* warning_main_sender, const char* warning_main_recipient, int expireConnections, int expireStats) {
     if (debug) {
         logfile->log(11, "Start Watching: %s %s %s %s\n", mysql_host, mysql_db, mysql_username, mysql_password);

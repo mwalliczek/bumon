@@ -1,12 +1,12 @@
 /*
  * Copyright (c) 2019 Matthias Walliczek
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef ACTIVEUDPCONNECTIONS_H
-#define ACTIVEUDPCONNECTIONS_H
+#ifndef ICMPV6_H
+#define ICMPV6_H
 
-#include <string>
-#include <map>
-#include <mutex>
+#include "ActiveConnections.h"
 
-#include "Connection.h"
-#include "TrafficManager.h"
-#include "ConnectionIdentifier.h"
-#include "ActiveStateConnections.h"
+#include "Ipv6Addr.h"
 
-template<typename IP>
-class ActiveUdpConnections : public ActiveStateConnections<IP> {
+class ICMPv6 : public ActiveConnections<Ipv6Addr> {
+    std::string getTypeString(unsigned char) const;
 public:
-    ActiveUdpConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs);
-    void handlePacket(IP const & ip_src, IP const & ip_dst, uint16_t ip_len, const u_char *packet);
-    void checkTimeout();
+    ICMPv6(std::list<InternNet<Ipv6Addr>> const & interns, std::list<Ipv6Addr> const & selfs);
+    void handlePacket(Ipv6Addr const & ip_src, Ipv6Addr const & ip_dst, uint16_t ip_len, const u_char *packet) const;
 };
 
 #endif

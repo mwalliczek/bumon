@@ -111,8 +111,17 @@
 /* ethernet headers are always exactly 14 bytes [1] */
 const int sizeEthernet = 14;
 
+const int etherAddrLen = 6;
+
+/* Ethernet header */
+struct sniff_ethernet {
+	u_char ether_dhost[etherAddrLen]; /* Destination host address */
+	u_char ether_shost[etherAddrLen]; /* Source host address */
+	u_short ether_type; /* IP? ARP? RARP? etc */
+};
+
 /* IP header */
-struct sniff_ip {
+struct sniff_ipv4 {
         u_char  ip_vhl;                 /* version << 4 | header length >> 2 */
         u_char  ip_tos;                 /* type of service */
         u_short ip_len;                 /* total length */
@@ -125,6 +134,19 @@ struct sniff_ip {
 };
 #define IP_HL(ip)               (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)                (((ip)->ip_vhl) >> 4)
+
+/* IP header */
+struct sniff_ipv6 {
+        u_char  ip_vtc1;                /* version << 4 | traffic class >> 2 */
+        u_char  ip_tc2fl1;              /* traffic class << 4 | flow control 1 */
+        u_short ip_fl2;                 /* flow control 2 */
+        u_short ip_payload_length;      /* payload length */
+        u_char  ip_p;                   /* protocol */
+        u_char  ip_ttl;                 /* time to live */
+        struct  in6_addr ip_src,ip_dst; /* source and dest address */
+};
+
+const int size_ip6 = sizeof(struct sniff_ipv6);
 
 Ip::Ip(ConfigfileParser* config) {
 	std::list<InternNet<Ipv4Addr>> internsv4;
@@ -161,11 +183,11 @@ Ip::Ip(ConfigfileParser* config) {
 	}
 	activev4TcpConnections = new ActiveTcpConnections<Ipv4Addr>(internsv4, selfsv4);
 	activev4UdpConnections = new ActiveUdpConnections<Ipv4Addr>(internsv4, selfsv4);
-	icmpv4 = new ICMP<Ipv4Addr>(internsv4, selfsv4);
+	icmpv4 = new ICMP(internsv4, selfsv4);
 	otherv4 = new ActiveConnections<Ipv4Addr>(internsv4, selfsv4);
 	activev6TcpConnections = new ActiveTcpConnections<Ipv6Addr>(internsv6, selfsv6);
 	activev6UdpConnections = new ActiveUdpConnections<Ipv6Addr>(internsv6, selfsv6);
-	icmpv6 = new ICMP<Ipv6Addr>(internsv6, selfsv6);
+	icmpv6 = new ICMPv6(internsv6, selfsv6);
 	otherv6 = new ActiveConnections<Ipv6Addr>(internsv6, selfsv6);
 }
 
@@ -188,8 +210,7 @@ Ip::~Ip() {
 }
 
 void Ip::handleV4(const u_char *packet) {
-	/* define/compute ip header offset */
-	const struct sniff_ip *ipv4 = (struct sniff_ip*)packet;
+	const struct sniff_ipv4 *ipv4 = (const struct sniff_ipv4*)packet;
 	
 	int size_ip = IP_HL(ipv4)*4;
 	if (size_ip < 20) {
@@ -221,6 +242,36 @@ void Ip::handleV4(const u_char *packet) {
 	}
 }
 
+void Ip::handleV6(const u_char *packet) {
+	const struct sniff_ipv6 *ipv6 = (const struct sniff_ipv6*)packet;
+	
+	int ip_len = ntohs(ipv6->ip_payload_length) + size_ip6;
+	
+	/* determine protocol */	
+	switch(ipv6->ip_p) {
+		case IPPROTO_TCP:
+			activev6TcpConnections->handlePacket(Ipv6Addr(ipv6->ip_src), Ipv6Addr(ipv6->ip_dst), 
+				ip_len, &packet[size_ip6], size_ip6);
+			break;
+		case IPPROTO_UDP:
+			activev6UdpConnections->handlePacket(Ipv6Addr(ipv6->ip_src), Ipv6Addr(ipv6->ip_dst), 
+				ip_len, &packet[size_ip6]);
+			break;
+		case IPPROTO_ICMPV6:
+			icmpv6->handlePacket(Ipv6Addr(ipv6->ip_src), Ipv6Addr(ipv6->ip_dst), ip_len, 
+				&packet[size_ip6]);
+			break;
+		default:
+			Ipv6Addr src = Ipv6Addr(ipv6->ip_src);
+			Ipv6Addr dst = Ipv6Addr(ipv6->ip_dst);
+			logfile->log(2, " %s > %s Protocol: unknown (%d)", src.toString().c_str(),
+				dst.toString().c_str(), ipv6->ip_p);
+			otherv6->handlePacket(src, dst, ip_len, ipv6->ip_p);
+			return;
+	}
+	
+}
+
 /*
  * dissect/print packet
  */
@@ -229,14 +280,17 @@ Ip::got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pac
 {
 	Ip* self = (Ip*) args;
 	
+	const struct sniff_ethernet *etherPacket = (const struct sniff_ethernet*)packet; 
+	
+	int ethernetType = ntohs(etherPacket->ether_type);
 	int version = packet[sizeEthernet] >> 4;
 
-	if (version == 4) {
+	if (ethernetType == 0x0800 && version == 4) {
 		self->handleV4(&packet[sizeEthernet]);
-	} else if (version == 6) {
-	
+	} else if (ethernetType == 0x86DD && version == 6) {
+		self->handleV6(&packet[sizeEthernet]);
 	} else {
-		logfile->log(2, "  unknown IP Protocol %d", version);
+		logfile->log(2, "  unknown Protocol %d", ethernetType);
 	}
 }
 

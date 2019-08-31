@@ -25,11 +25,13 @@ class Ipv6AddrTest : public CPPUNIT_NS::TestFixture
  CPPUNIT_TEST_SUITE( Ipv6AddrTest );
  CPPUNIT_TEST( testParse );
  CPPUNIT_TEST( testCompare );
+ CPPUNIT_TEST( testResolve );
  CPPUNIT_TEST_SUITE_END();
 
  public:
   void testParse();
   void testCompare();
+  void testResolve();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( Ipv6AddrTest );
@@ -58,4 +60,9 @@ void Ipv6AddrTest::testCompare() {
  CPPUNIT_ASSERT(test3 < test2);
  CPPUNIT_ASSERT((test2 & testMask) == test1);
  CPPUNIT_ASSERT(test2.toString() == "2001:db8:abcd:12::1");
+}
+
+void Ipv6AddrTest::testResolve() {
+ Ipv6Addr testlo = Ipv6Addr((char *) "::2");
+ CPPUNIT_ASSERT(testlo.resolve() == "::2");
 }

@@ -132,7 +132,7 @@ int calcOffset(u_char th_offx2) {
 }
 
 template<typename IP>
-ActiveTcpConnections<IP>::ActiveTcpConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs) :
+ActiveTcpConnections<IP>::ActiveTcpConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs) :
 ActiveStateConnections<IP>(interns, selfs) { }
 
 template<typename IP>
@@ -144,7 +144,8 @@ void debugLog(ConnectionIdentifier<IP> identifier, Connection* connection, const
 }
 
 template<typename IP>
-void ActiveTcpConnections<IP>::handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, const u_char *packet, int size_ip) {
+void ActiveTcpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst, uint16_t ip_len, 
+		const u_char *packet, int size_ip) {
 	const struct sniff_tcp *tcp;            /* The TCP header */
 	int size_tcp;
 	
@@ -153,7 +154,7 @@ void ActiveTcpConnections<IP>::handlePacket(IP ip_src, IP ip_dst, uint16_t ip_le
 	 */
 	
 	/* define/compute tcp header offset */
-	tcp = (struct sniff_tcp*)packet;
+	tcp = (const struct sniff_tcp*)packet;
 	size_tcp = calcOffset(tcp->th_offx2)*4;
 	if (size_tcp < 20) {
 		fprintf(stderr, "   * Invalid TCP header length: %u bytes\n", size_tcp);

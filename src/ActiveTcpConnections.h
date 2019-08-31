@@ -25,8 +25,8 @@
 template<typename IP>
 class ActiveTcpConnections : public ActiveStateConnections<IP> {
 public:
-    ActiveTcpConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs);
-    void handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, const u_char *packet, int size_ip);
+    ActiveTcpConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs);
+    void handlePacket(IP const & ip_src, IP const & ip_dst, uint16_t ip_len, const u_char *packet, int size_ip);
     void checkTimeout();
 };
 

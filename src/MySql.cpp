@@ -32,7 +32,7 @@ const char* numberStatsStatement="SELECT COUNT(DISTINCT timestamp) FROM stats WH
 const char* cleanupConnectionsStatement="DELETE FROM connections WHERE timestamp < DATE_SUB(CURRENT_DATE(), INTERVAL ? DAY)";
 const char* cleanupStatsStatement="DELETE FROM stats WHERE timestamp < DATE_SUB(CURRENT_DATE(), INTERVAL ? MONTH)";
 
-MySql::MySql(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password):
+MySql::MySql(const char* mysql_host, const char* mysql_db, const char* mysql_username, const char* mysql_password):
         mysql_host(mysql_host), mysql_db(mysql_db), mysql_username(mysql_username), mysql_password(mysql_password) {
     init();
 }
@@ -85,20 +85,21 @@ void MySql::destroy() {
 char name[256];
 
 const char* protocolName(short protocol) {
-    if (protocol == IPPROTO_ICMP) {
-      return "icmp";
+    switch (protocol) {
+        case IPPROTO_ICMP:
+            return "icmp";
+        case IPPROTO_ICMPV6:
+            return "icmpv6";
+        case IPPROTO_TCP:
+            return "tcp";
+        case IPPROTO_UDP:
+            return "udp";
+        case 255:
+            return "";
+        default:
+            snprintf(name, 256, "unknown (%i)", protocol);
+            return name;
     }
-    if (protocol == IPPROTO_TCP) {
-      return "tcp";
-    }
-    if (protocol == IPPROTO_UDP) {
-      return "udp";
-    }
-    if (protocol == 255) {
-      return "";
-    }
-    snprintf(name, 256, "unknown (%i)", protocol);
-    return name;
 }
 
 void mapProtocol(short protocol, unsigned long *str_length, MYSQL_BIND* bind) {

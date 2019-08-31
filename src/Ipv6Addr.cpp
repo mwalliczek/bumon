@@ -15,6 +15,9 @@
  */
 
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #include "Logfile.h"
 #include "bumon.h"
@@ -36,15 +39,25 @@ bool Ipv6Addr::empty() const {
     return IN6_IS_ADDR_UNSPECIFIED(&ip);
 }
 
-char straddr[INET6_ADDRSTRLEN];
 
 std::string Ipv6Addr::toString() const {
+    char straddr[INET6_ADDRSTRLEN];
     inet_ntop(AF_INET6, &ip, straddr, sizeof(straddr));
     return std::string(straddr);
 }
 
 std::string Ipv6Addr::resolve() const {
-    return "";
+    struct sockaddr_in6 addr;
+    addr.sin6_family = AF_INET6;
+    addr.sin6_addr = ip;
+    socklen_t addrlen = sizeof(addr);
+    char hbuf[NI_MAXHOST];
+
+    if (getnameinfo((const sockaddr*)&addr, addrlen, hbuf, sizeof(hbuf), NULL, 0, NI_NAMEREQD)) {
+        return toString();
+    } else {
+        return toString() + " (" + hbuf + ")";
+    }
 }
 
 bool operator== (Ipv6Addr const&a, Ipv6Addr const&b) {

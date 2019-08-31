@@ -35,17 +35,18 @@ class MySql {
     MYSQL_STMT *mysql_stmt_cleanup_connections;
     MYSQL_STMT *mysql_stmt_cleanup_stats;
 
-    char* mysql_host;
-    char* mysql_db;
-    char* mysql_username;
-    char* mysql_password;
+    const char* mysql_host;
+    const char* mysql_db;
+    const char* mysql_username;
+    const char* mysql_password;
     
     void init();
     void destroy();
         
     
     public:
-        explicit MySql(char* mysql_host, char* mysql_db, char* mysql_username, char* mysql_password);
+        explicit MySql(const char* mysql_host, const char* mysql_db, const char* mysql_username, 
+                const char* mysql_password);
         MySql(const MySql&) = delete;
         ~MySql();
         

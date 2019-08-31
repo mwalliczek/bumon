@@ -19,11 +19,13 @@
 
 #include "ActiveConnections.h"
 
-template<typename IP>
-class ICMP : public ActiveConnections<IP> {
+#include "Ipv4Addr.h"
+
+class ICMP : public ActiveConnections<Ipv4Addr> {
+    std::string getTypeString(unsigned char) const;
 public:
-    ICMP(std::list<InternNet<IP>> interns, std::list<IP> selfs);
-    void handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, const u_char *packet) const;
+    ICMP(std::list<InternNet<Ipv4Addr>> const & interns, std::list<Ipv4Addr> const & selfs);
+    void handlePacket(Ipv4Addr const & ip_src, Ipv4Addr const & ip_dst, uint16_t ip_len, const u_char *packet) const;
 };
 
 #endif

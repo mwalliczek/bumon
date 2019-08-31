@@ -30,11 +30,12 @@ struct sniff_udp {
 };
 
 template<typename IP>
-ActiveUdpConnections<IP>::ActiveUdpConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs) :
+ActiveUdpConnections<IP>::ActiveUdpConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs) :
 ActiveStateConnections<IP>(interns, selfs) { }
 
 template<typename IP>
-void ActiveUdpConnections<IP>::handlePacket(IP ip_src, IP ip_dst, uint16_t ip_len, const u_char *packet) {
+void ActiveUdpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst, uint16_t ip_len, 
+		const u_char *packet) {
 	const struct sniff_udp *udp;            /* The TCP header */
 	
 	/*
@@ -42,7 +43,7 @@ void ActiveUdpConnections<IP>::handlePacket(IP ip_src, IP ip_dst, uint16_t ip_le
 	 */
 	
 	/* define/compute tcp header offset */
-	udp = (struct sniff_udp*)packet;
+	udp = (const struct sniff_udp*)packet;
 	
 	int sport = ntohs(udp->th_sport);
 	int dport = ntohs(udp->th_dport);

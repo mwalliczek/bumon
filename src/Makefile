@@ -52,6 +52,9 @@ ActiveUdpConnections.o:	ActiveUdpConnections.cpp ActiveUdpConnections.h ActiveSt
 ICMP.o:		ICMP.cpp ICMP.h ActiveConnections.h bumon.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ICMP.cpp
 
+ICMPv6.o:	ICMPv6.cpp ICMPv6.h ActiveConnections.h bumon.h
+		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ICMPv6.cpp
+
 ConfigfileParser.o:	ConfigfileParser.cpp ConfigfileParser.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c ConfigfileParser.cpp
 		
@@ -61,7 +64,7 @@ MySql.o:	MySql.cpp MySql.h
 Stats.o:	Stats.cpp Stats.h Statistics.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c Stats.cpp
 
-Ip.o:		Ip.cpp Ip.h
+Ip.o:		Ip.cpp Ip.h ActiveTcpConnections.h ActiveUdpConnections.h ActiveStateConnections.h ActiveConnections.h IpAddr.h Ipv4Addr.h Ipv6Addr.h ICMP.h ICMPv6.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c Ip.cpp
 
 Ipv4Addr.o:	Ipv4Addr.cpp Ipv4Addr.h IpAddr.h
@@ -73,8 +76,8 @@ Ipv6Addr.o:	Ipv6Addr.cpp Ipv6Addr.h IpAddr.h
 InternNet.o:	InternNet.cpp InternNet.h
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c InternNet.cpp
 
-bumon:		bumon.o Connection.o FindProcess.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o Ip.o Ipv4Addr.o Ipv6Addr.o InternNet.o SumConnectionIdentifier.o ICMP.o
-		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o FindProcess.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o Ip.o Ipv4Addr.o Ipv6Addr.o InternNet.o SumConnectionIdentifier.o ICMP.o $(LIBS)
+bumon:		bumon.o Connection.o FindProcess.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o Ip.o Ipv4Addr.o Ipv6Addr.o InternNet.o SumConnectionIdentifier.o ICMP.o ICMPv6.o
+		$(CC) $(LDFLAGS) $(LIBPATH) -o bumon bumon.o Connection.o FindProcess.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveUdpConnections.o ConnectionIdentifier.o Watching.o TrafficManager.o ConfigfileParser.o Logfile.o tls.o MySql.o Stats.o Ip.o Ipv4Addr.o Ipv6Addr.o InternNet.o SumConnectionIdentifier.o ICMP.o ICMPv6.o $(LIBS)
 		chmod +x bumon
 
 InternNetTest.o:	InternNetTest.cpp InternNet.h
@@ -135,8 +138,8 @@ Ipv6AddrTest.o:	Ipv6AddrTest.cpp Ipv6Addr.h
 test.o:		test.cpp
 		$(CC) $(CPPFLAGS) $(LIB) $(INC) -c test.cpp
 
-test:		InternNet.o InternNetTest.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnectionsTest.o ActiveTcpConnections.o test.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o MySql.o Stats.o MySqlTest.o StatsTest.o IpTest.o Ip.o IpMock.o SumConnectionIdentifierTest.o SumConnectionIdentifier.o Ipv4Addr.o Ipv4AddrTest.o Ipv6Addr.o Ipv6AddrTest.o ICMP.o
-		$(CC) $(LDFLAGS) $(LIBPATH) -o test test.o InternNet.o InternNetTest.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveTcpConnectionsTest.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o MySql.o Stats.o MySqlTest.o StatsTest.o IpTest.o Ip.o IpMock.o SumConnectionIdentifierTest.o SumConnectionIdentifier.o Ipv4Addr.o Ipv4AddrTest.o Ipv6Addr.o Ipv6AddrTest.o ICMP.o -lcppunit $(LIBS)
+test:		InternNet.o InternNetTest.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnectionsTest.o ActiveTcpConnections.o test.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o MySql.o Stats.o MySqlTest.o StatsTest.o IpTest.o Ip.o IpMock.o SumConnectionIdentifierTest.o SumConnectionIdentifier.o Ipv4Addr.o Ipv4AddrTest.o Ipv6Addr.o Ipv6AddrTest.o ICMP.o ICMPv6.o
+		$(CC) $(LDFLAGS) $(LIBPATH) -o test test.o InternNet.o InternNetTest.o ConnectionTest.o Connection.o FindProcess.o FindProcessTest.o ActiveConnections.o ActiveStateConnections.o ActiveTcpConnections.o ActiveTcpConnectionsTest.o ConnectionIdentifier.o TrafficManager.o WatchingMock.o Watching.o WatchingTest.o ActiveUdpConnectionsTest.o ActiveUdpConnections.o ConfigfileParserTest.o ConfigfileParser.o Logfile.o LogfileTest.o tls.o ConnectionIdentifierTest.o MySql.o Stats.o MySqlTest.o StatsTest.o IpTest.o Ip.o IpMock.o SumConnectionIdentifierTest.o SumConnectionIdentifier.o Ipv4Addr.o Ipv4AddrTest.o Ipv6Addr.o Ipv6AddrTest.o ICMP.o ICMPv6.o -lcppunit $(LIBS)
 		
 clean:
 		rm -f *.o *.gcov *.gcda *.gcno bumon test

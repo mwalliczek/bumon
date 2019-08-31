@@ -24,9 +24,10 @@ class ActiveStateConnections : public ActiveConnections<IP> {
 protected:
     std::map<ConnectionIdentifier<IP>, int> map;
     std::mutex map_mutex;
-    Connection* createConnection(IP ip_src, int sport, IP ip_dst, int dport, u_char protocol, const char *logMessage); 
+    Connection* createConnection(IP const & ip_src, int sport, IP const & ip_dst, int dport, u_char protocol, 
+            const char *logMessage); 
 public:
-    ActiveStateConnections(std::list<InternNet<IP>> interns, std::list<IP> selfs);
+    ActiveStateConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs);
 };
 
 #endif

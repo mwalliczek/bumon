@@ -220,9 +220,8 @@ int main(int argc, char *argv[])
     findProcesses->init();
     
     if (!mysql_host.empty() && !mysql_user.empty() && !mysql_pass.empty() && !mysql_db.empty()) {
-        watching = new Watching((char *) mysql_host.c_str(), (char *) mysql_db.c_str(), (char *) mysql_user.c_str(), 
-                (char *) mysql_pass.c_str(), warning_mail_sender.c_str(), warning_mail_recipient.c_str(), 
-                expireConnections, expireStats);
+        watching = new Watching(mysql_host.c_str(), mysql_db.c_str(), mysql_user.c_str(), mysql_pass.c_str(), 
+                warning_mail_sender.c_str(), warning_mail_recipient.c_str(), expireConnections, expireStats);
     } else {
         watching = new Watching(true);
     }
