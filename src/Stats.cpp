@@ -182,9 +182,11 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
     }
     if (!message.empty()) {
         if (protocol == 255) {
-            message = std::string(inbound ? "Inbound" : "Outbound") + std::string(intern ? " intern" : " extern") + message;
+            message = std::string(inbound ? "Inbound" : "Outbound") + std::string(intern ? " intern" : " extern") 
+                    + message;
         } else {
-            message = "  Port " + std::to_string(dst_port) + " (" + std::string(protocolName(protocol)) + ")" + message;
+            message = "  Port " + std::to_string(dst_port) + " (" + std::string(MySql::protocolName(protocol)) + ")" 
+                    + message;
             if (!intern) {
                 std::vector<TopHosts> currentTopHosts = lookupTopHosts(statsbuff, dst_port, protocol, intern, inbound);
                 int topHostCount = 0;

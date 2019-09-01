@@ -23,8 +23,6 @@
 
 #include "Statistics.h"
 
-const char* protocolName(short protocol);
-
 class MySql {
     MYSQL *mysql_connection;
     MYSQL_STMT *mysql_stmt_bandwidth;
@@ -40,9 +38,13 @@ class MySql {
     const char* mysql_username;
     const char* mysql_password;
     
+    static void mapProtocol(short protocol, unsigned long *str_length, MYSQL_BIND* bind);
+    
     void init();
     void destroy();
-        
+    
+    MYSQL_STMT* initStmt(const char* stmt);
+    void bindAndExecute(MYSQL_STMT* stmt, MYSQL_BIND* bind);
     
     public:
         explicit MySql(const char* mysql_host, const char* mysql_db, const char* mysql_username, 
@@ -58,6 +60,7 @@ class MySql {
         int lookupNumberStats(char* buff);
         void cleanupConnections(int days);
         void cleanupStats(int months);
+        static const char* protocolName(short protocol);
 };
 
 #endif

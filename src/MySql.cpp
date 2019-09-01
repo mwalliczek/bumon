@@ -37,7 +37,7 @@ MySql::MySql(const char* mysql_host, const char* mysql_db, const char* mysql_use
     init();
 }
 
-MYSQL_STMT * initStmt(MYSQL *mysql_connection, const char* stmt) {
+MYSQL_STMT * MySql::initStmt(const char* stmt) {
   MYSQL_STMT* mysql_stmt = mysql_stmt_init(mysql_connection);
     if (!mysql_stmt)
     {
@@ -58,13 +58,13 @@ void MySql::init() {
       fprintf(stderr, "Conection error : %s\n", mysql_error(mysql_connection));
       exit(0);
     }
-    mysql_stmt_bandwidth = initStmt(mysql_connection, insertBandwidthStatement);
-    mysql_stmt_connections = initStmt(mysql_connection, insertConnectionsStatement);
-    mysql_stmt_insert_stats = initStmt(mysql_connection, insertStatsStatement);
-    mysql_stmt_select_stats = initStmt(mysql_connection, selectStatsStatement);
-    mysql_stmt_number_stats = initStmt(mysql_connection, numberStatsStatement);
-    mysql_stmt_cleanup_connections = initStmt(mysql_connection, cleanupConnectionsStatement);
-    mysql_stmt_cleanup_stats = initStmt(mysql_connection, cleanupStatsStatement);
+    mysql_stmt_bandwidth = initStmt(insertBandwidthStatement);
+    mysql_stmt_connections = initStmt(insertConnectionsStatement);
+    mysql_stmt_insert_stats = initStmt(insertStatsStatement);
+    mysql_stmt_select_stats = initStmt(selectStatsStatement);
+    mysql_stmt_number_stats = initStmt(numberStatsStatement);
+    mysql_stmt_cleanup_connections = initStmt(cleanupConnectionsStatement);
+    mysql_stmt_cleanup_stats = initStmt(cleanupStatsStatement);
 }
 
 MySql::~MySql() {
@@ -84,7 +84,7 @@ void MySql::destroy() {
 
 char name[256];
 
-const char* protocolName(short protocol) {
+const char* MySql::protocolName(short protocol) {
     switch (protocol) {
         case IPPROTO_ICMP:
             return "icmp";
@@ -97,12 +97,12 @@ const char* protocolName(short protocol) {
         case 255:
             return "";
         default:
-            snprintf(name, 256, "unknown (%i)", protocol);
+            snprintf(name, 256, "unk (%i)", protocol);
             return name;
     }
 }
 
-void mapProtocol(short protocol, unsigned long *str_length, MYSQL_BIND* bind) {
+void MySql::mapProtocol(short protocol, unsigned long *str_length, MYSQL_BIND* bind) {
   const char* protocolNameString = protocolName(protocol);
   bind->buffer_type= MYSQL_TYPE_STRING;
   bind->buffer = (char*) protocolNameString;
@@ -110,138 +110,104 @@ void mapProtocol(short protocol, unsigned long *str_length, MYSQL_BIND* bind) {
   bind->length = str_length;
 }
 
-void MySql::insertBandwidth(char* buff, short duration, long long int sum, short intern) {
-                MYSQL_BIND bind[4];
-                unsigned long str_length = strlen(buff);
-                memset(bind, 0, sizeof(bind));
-                bind[0].buffer_type= MYSQL_TYPE_STRING;
-                bind[0].buffer= buff;
-                bind[0].length= &str_length;
-                bind[1].buffer_type= MYSQL_TYPE_SHORT;
-                bind[1].buffer= (char *)&duration;
-                bind[2].buffer_type= MYSQL_TYPE_LONGLONG;
-                bind[2].buffer= (char *)&sum;
-                bind[3].buffer_type= MYSQL_TYPE_SHORT;
-                bind[3].buffer= (char *)&intern;
+void MySql::bindAndExecute(MYSQL_STMT* stmt, MYSQL_BIND* bind) {
     for (int tries=1; tries<5; tries++) {
-                /* Bind the buffers */
-                if (mysql_stmt_bind_param(mysql_stmt_bandwidth, bind))
-                {
-                  logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_bandwidth));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_bandwidth));
-                  exit(0);
-                }
-                /* Execute the INSERT statement - 1*/
-                if (!mysql_stmt_execute(mysql_stmt_bandwidth)) break;
-                logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_bandwidth));
-                logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_bandwidth));
-                  
-                if (2013 == mysql_stmt_errno(mysql_stmt_bandwidth)) {
-                    logfile->log(1, " trying to reconnect mysql");
-                    destroy();
-                    init();
-                } else {
-                    exit(0);
-                }
+        /* Bind the buffers */
+        if (mysql_stmt_bind_param(stmt, bind))
+        {
+          logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(stmt));
+          logfile->log(1, " %s\n", mysql_stmt_error(stmt));
+          exit(0);
+        }
+        /* Execute the INSERT statement - 1*/
+        if (!mysql_stmt_execute(stmt)) break;
+        logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(stmt));
+        logfile->log(1, " %s\n", mysql_stmt_error(stmt));
+          
+        if (2013 == mysql_stmt_errno(stmt)) {
+            logfile->log(1, " trying to reconnect mysql");
+            destroy();
+            init();
+        } else {
+            exit(0);
+        }
     }
+}
+
+void MySql::insertBandwidth(char* buff, short duration, long long int sum, short intern) {
+    MYSQL_BIND bind[4];
+    unsigned long str_length = strlen(buff);
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type= MYSQL_TYPE_STRING;
+    bind[0].buffer= buff;
+    bind[0].length= &str_length;
+    bind[1].buffer_type= MYSQL_TYPE_SHORT;
+    bind[1].buffer= (char *)&duration;
+    bind[2].buffer_type= MYSQL_TYPE_LONGLONG;
+    bind[2].buffer= (char *)&sum;
+    bind[3].buffer_type= MYSQL_TYPE_SHORT;
+    bind[3].buffer= (char *)&intern;
+    
+    bindAndExecute(mysql_stmt_bandwidth, bind);
 }
 
 void MySql::insertConnection(char* buff, short duration, const char* foreign_ip, int dst_port, short protocol, 
         const char* process, const char* content, long long int bytes, short inbound, short intern) {
     MYSQL_BIND bind[10];
-                unsigned long str_length_buff = strlen(buff);
-                unsigned long str_length_ip = strlen(foreign_ip);
-                unsigned long str_length_process = strlen(process);
-                unsigned long str_length_content = strlen(content);
-                unsigned long str_protocol = 0;
-                memset(bind, 0, sizeof(bind));
-                bind[0].buffer_type= MYSQL_TYPE_STRING;
-                bind[0].buffer= buff;
-                bind[0].length= &str_length_buff;
-                bind[1].buffer_type= MYSQL_TYPE_SHORT;
-                bind[1].buffer= (char *)&duration;
-                bind[2].buffer_type= MYSQL_TYPE_STRING;
-                bind[2].buffer= (char *) foreign_ip;
-                bind[2].length = &str_length_ip;
-                bind[3].buffer_type= MYSQL_TYPE_LONG;
-                bind[3].buffer= (char *)&dst_port;
-                mapProtocol(protocol, &str_protocol, &bind[4]);
-                bind[5].buffer_type= MYSQL_TYPE_STRING;
-                bind[5].buffer= (char *)process;
-                bind[5].length = &str_length_process;
-                bind[6].buffer_type= MYSQL_TYPE_STRING;
-                bind[6].buffer= (char *)content;
-                bind[6].length = &str_length_content;
-                bind[7].buffer_type= MYSQL_TYPE_LONGLONG;
-                bind[7].buffer= (char *)&bytes;
-                bind[8].buffer_type= MYSQL_TYPE_SHORT;
-                bind[8].buffer= (char *)&inbound;
-                bind[9].buffer_type= MYSQL_TYPE_SHORT;
-                bind[9].buffer= (char *)&intern;
-                
-    for (int tries=1; tries<5; tries++) {
-                /* Bind the buffers */
-                if (mysql_stmt_bind_param(mysql_stmt_connections, bind))
-                {
-                  logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_connections));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_connections));
-                  exit(0);
-                }
-                /* Execute the INSERT statement - 1*/
-                if (!mysql_stmt_execute(mysql_stmt_connections)) break;
-                logfile->log(1, " mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt_connections));
-                logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_connections));
-
-                if (2013 == mysql_stmt_errno(mysql_stmt_connections)) {
-                  logfile->log(1, " trying to reconnect mysql");
-                  destroy();
-                  init();
-                } else {
-                  exit(0);
-                }
-    }
+    unsigned long str_length_buff = strlen(buff);
+    unsigned long str_length_ip = strlen(foreign_ip);
+    unsigned long str_length_process = strlen(process);
+    unsigned long str_length_content = strlen(content);
+    unsigned long str_protocol = 0;
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type= MYSQL_TYPE_STRING;
+    bind[0].buffer= buff;
+    bind[0].length= &str_length_buff;
+    bind[1].buffer_type= MYSQL_TYPE_SHORT;
+    bind[1].buffer= (char *)&duration;
+    bind[2].buffer_type= MYSQL_TYPE_STRING;
+    bind[2].buffer= (char *) foreign_ip;
+    bind[2].length = &str_length_ip;
+    bind[3].buffer_type= MYSQL_TYPE_LONG;
+    bind[3].buffer= (char *)&dst_port;
+    mapProtocol(protocol, &str_protocol, &bind[4]);
+    bind[5].buffer_type= MYSQL_TYPE_STRING;
+    bind[5].buffer= (char *)process;
+    bind[5].length = &str_length_process;
+    bind[6].buffer_type= MYSQL_TYPE_STRING;
+    bind[6].buffer= (char *)content;
+    bind[6].length = &str_length_content;
+    bind[7].buffer_type= MYSQL_TYPE_LONGLONG;
+    bind[7].buffer= (char *)&bytes;
+    bind[8].buffer_type= MYSQL_TYPE_SHORT;
+    bind[8].buffer= (char *)&inbound;
+    bind[9].buffer_type= MYSQL_TYPE_SHORT;
+    bind[9].buffer= (char *)&intern;
+    
+    bindAndExecute(mysql_stmt_connections, bind);
 }
 
 void MySql::insertStats(char* buff, Statistics* stat) {
-                MYSQL_BIND bind[6];
-                unsigned long str_length_buff = strlen(buff);
-                unsigned long str_protocol = 0;
-                short inbound = (stat->inbound ? 1 : 0);
-                short intern = (stat->intern ? 1 : 0);
-                memset(bind, 0, sizeof(bind));
-                bind[0].buffer_type= MYSQL_TYPE_STRING;
-                bind[0].buffer= buff;
-                bind[0].length= &str_length_buff;
-                bind[1].buffer_type= MYSQL_TYPE_LONGLONG;
-                bind[1].buffer= (char *)&stat->sum;
-                bind[2].buffer_type= MYSQL_TYPE_SHORT;
-                bind[2].buffer= (char *)&inbound;
-                bind[3].buffer_type= MYSQL_TYPE_SHORT;
-                bind[3].buffer= (char *)&intern;
-                bind[4].buffer_type= MYSQL_TYPE_LONG;
-                bind[4].buffer= (char *)&stat->dst_port;
-                mapProtocol(stat->protocol, &str_protocol, &bind[5]);
-    for (int tries=1; tries<5; tries++) {
-                /* Bind the buffers */
-                if (mysql_stmt_bind_param(mysql_stmt_insert_stats, bind))
-                {
-                  logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_insert_stats));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_insert_stats));
-                  exit(0);
-                }
-                /* Execute the INSERT statement - 1*/
-                if (!mysql_stmt_execute(mysql_stmt_insert_stats)) break;
-                logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_insert_stats));
-                logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_insert_stats));
-
-                if (2013 == mysql_stmt_errno(mysql_stmt_insert_stats)) {
-                  logfile->log(1, " trying to reconnect mysql");
-                  destroy();
-                  init();
-                } else {
-                  exit(0);
-                }
-  }
+    MYSQL_BIND bind[6];
+    unsigned long str_length_buff = strlen(buff);
+    unsigned long str_protocol = 0;
+    short inbound = (stat->inbound ? 1 : 0);
+    short intern = (stat->intern ? 1 : 0);
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type= MYSQL_TYPE_STRING;
+    bind[0].buffer= buff;
+    bind[0].length= &str_length_buff;
+    bind[1].buffer_type= MYSQL_TYPE_LONGLONG;
+    bind[1].buffer= (char *)&stat->sum;
+    bind[2].buffer_type= MYSQL_TYPE_SHORT;
+    bind[2].buffer= (char *)&inbound;
+    bind[3].buffer_type= MYSQL_TYPE_SHORT;
+    bind[3].buffer= (char *)&intern;
+    bind[4].buffer_type= MYSQL_TYPE_LONG;
+    bind[4].buffer= (char *)&stat->dst_port;
+    mapProtocol(stat->protocol, &str_protocol, &bind[5]);
+    
+    bindAndExecute(mysql_stmt_insert_stats, bind);
 }
 
 std::vector<long long int>* MySql::lookupStats(char* buff, int dst_port, int protocol, bool intern, bool inbound) {
@@ -356,27 +322,8 @@ void MySql::cleanupConnections(int days) {
     memset(bind, 0, sizeof(bind));
     bind[0].buffer_type= MYSQL_TYPE_LONG;
     bind[0].buffer= (char *)&days;
-    for (int tries=1; tries<5; tries++) {
-                /* Bind the buffers */
-                if (mysql_stmt_bind_param(mysql_stmt_cleanup_connections, bind))
-                {
-                  logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_cleanup_connections));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_cleanup_connections));
-                  exit(0);
-                }
-                /* Execute the INSERT statement - 1*/
-                if (!mysql_stmt_execute(mysql_stmt_cleanup_connections)) break;
-                logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_cleanup_connections));
-                logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_cleanup_connections));
-                  
-                if (2013 == mysql_stmt_errno(mysql_stmt_cleanup_connections)) {
-                    logfile->log(1, " trying to reconnect mysql");
-                    destroy();
-                    init();
-                } else {
-                    exit(0);
-                }
-    }
+    
+    bindAndExecute(mysql_stmt_cleanup_connections, bind);
 }
 
 void MySql::cleanupStats(int month) {
@@ -384,25 +331,6 @@ void MySql::cleanupStats(int month) {
     memset(bind, 0, sizeof(bind));
     bind[0].buffer_type= MYSQL_TYPE_LONG;
     bind[0].buffer= (char *)&month;
-    for (int tries=1; tries<5; tries++) {
-                /* Bind the buffers */
-                if (mysql_stmt_bind_param(mysql_stmt_cleanup_stats, bind))
-                {
-                  logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_cleanup_stats));
-                  logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_cleanup_stats));
-                  exit(0);
-                }
-                /* Execute the INSERT statement - 1*/
-                if (!mysql_stmt_execute(mysql_stmt_cleanup_stats)) break;
-                logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(mysql_stmt_cleanup_stats));
-                logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_cleanup_stats));
-                  
-                if (2013 == mysql_stmt_errno(mysql_stmt_cleanup_stats)) {
-                    logfile->log(1, " trying to reconnect mysql");
-                    destroy();
-                    init();
-                } else {
-                    exit(0);
-                }
-    }
+    
+    bindAndExecute(mysql_stmt_cleanup_stats, bind);
 }
