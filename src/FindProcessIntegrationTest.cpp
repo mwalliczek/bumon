@@ -27,7 +27,7 @@
 
 std::string ssPath = "ss";
 
-int main(int argc, char *argv[])
+int main(int, char **)
 {
  FindProcess* findProcess = new FindProcess();
  

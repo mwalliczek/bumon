@@ -45,7 +45,7 @@ bool debug = true;
 std::string ssPath = "./ssMock";
 std::string sendmailPath = "cat > sendmail.txt";
 
-int main (int argc, char* argv[])
+int main (int, char**)
 {
     logfile = new Logfile("", 11);
     watching = new WatchingMock();
