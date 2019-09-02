@@ -24,6 +24,16 @@ ActiveStateConnections<IP>::ActiveStateConnections(std::list<InternNet<IP>> cons
         std::list<IP> const & selfs): ActiveConnections<IP>(interns, selfs) { }
 
 template<typename IP>
+void ActiveStateConnections<IP>::lock() {
+    map_mutex.lock();
+}
+
+template<typename IP>
+void ActiveStateConnections<IP>::unlock() {
+    map_mutex.unlock();
+}
+
+template<typename IP>
 Connection* ActiveStateConnections<IP>::createConnection(IP const & ip_src, int sport, IP const & ip_dst, int dport, 
         u_char protocol, const char *logMessage) {
     Connection* connection = this->createSimpleConnection(ip_src, ip_dst, protocol);
@@ -36,6 +46,22 @@ Connection* ActiveStateConnections<IP>::createConnection(IP const & ip_src, int 
 	logfile->log(6, "%s: %s = %d", logMessage, identifier.toString().c_str(), connection->id);
     }
     return connection;
+}
+
+template<typename IP>
+std::optional<std::pair<ConnectionIdentifier<IP>, Connection*>> ActiveStateConnections<IP>::findConnection(
+        IP const & ip_src, int sport, IP const & ip_dst, int dport) {
+    auto iter = map.find(ConnectionIdentifier<IP>(ip_src, sport, ip_dst, dport));
+    if (iter != map.end()) {
+        return std::optional<std::pair<ConnectionIdentifier<IP>, Connection*>>(std::pair<ConnectionIdentifier<IP>, 
+                Connection*>(iter->first, allConnections[iter->second]));
+    }
+    return std::optional<std::pair<ConnectionIdentifier<IP>, Connection*>>();
+}
+
+template<typename IP>
+std::map<ConnectionIdentifier<IP>, int>* ActiveStateConnections<IP>::getMap() {
+    return &map;
 }
 
 template class ActiveStateConnections<Ipv4Addr>;

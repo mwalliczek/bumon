@@ -37,71 +37,71 @@ template<typename IP>
 void ActiveUdpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst, uint16_t ip_len, 
 		const u_char *packet) {
 	const struct sniff_udp *udp;            /* The TCP header */
-	
+
 	/*
 	 *  OK, this packet is TCP.
 	 */
-	
+
 	/* define/compute tcp header offset */
 	udp = (const struct sniff_udp*)packet;
-	
+
 	int sport = ntohs(udp->th_sport);
 	int dport = ntohs(udp->th_dport);
-	
+
 	if (logfile->checkLevel(10)) {
 	    logfile->log(10, "%s:%d -> %s:%d len=%d", ip_src.toString().c_str(), sport, ip_dst.toString().c_str(), dport, ip_len);
 	}
-	
+
 	Connection *foundConnection = NULL;
-	this->map_mutex.lock();
+	this->lock();
 	allConnections_mutex.lock();
-	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter;
-	if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_src, sport, ip_dst, dport))) != this->map.end()) {
-		foundConnection = allConnections[iter->second];
-	} else if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_dst, dport, ip_src, sport))) != this->map.end()) {
-	    	foundConnection = allConnections[iter->second];
+	std::optional<std::pair<ConnectionIdentifier<IP>, Connection*>> findConnectionResult;
+	if ((findConnectionResult = this->findConnection(ip_src, sport, ip_dst, dport)).has_value()) {
+	    foundConnection = findConnectionResult.value().second;
+	} else if ((findConnectionResult = this->findConnection(ip_dst, dport, ip_src, sport)).has_value()) {
+	    foundConnection = findConnectionResult.value().second;
 	} else {
 		std::string process;
 		if (this->isSelf(ip_dst) && !(process = findProcesses->findListenUdpProcess(dport)).empty()) {
-	            foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
-	            foundConnection->process = process;
+		    foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
+		    foundConnection->process = process;
 		} else if (this->isSelf(ip_src) && !(process = findProcesses->findListenUdpProcess(sport)).empty()) {
-	            foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
-	            foundConnection->process = process;
+		    foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
+		    foundConnection->process = process;
 		} else if (dport < 1024) {
-	            foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
+		    foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
 		} else if (sport < 1024) {
-	            foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
+		    foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
 		} else {
-	            foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
+		    foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
 		}
 	}
-	this->map_mutex.unlock();
+	this->unlock();
 	allConnections_mutex.unlock();
 	if (foundConnection) {
 		time(&foundConnection->lastAct);
 		trafficManager->handleTraffic(foundConnection->id, ip_len);
-        }
+	}
 }
 
 template<typename IP>
 void ActiveUdpConnections<IP>::checkTimeout() {
-	this->map_mutex.lock();
-	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter = this->map.begin();
+	this->lock();
+	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter = this->getMap()->begin();
 	time_t current;
 	time(&current);
-	while (iter != this->map.end()) {
+	while (iter != this->getMap()->end()) {
 		allConnections_mutex.lock();
 		Connection* connection = allConnections[iter->second];
 		allConnections_mutex.unlock();
 		if (difftime(current, connection->lastAct) > 600) {
-        	        iter = this->map.erase(iter);
+        	        iter = this->getMap()->erase(iter);
         	        connection->stop();
         	        continue;
 		}
 		iter++;
 	}
-	this->map_mutex.unlock();
+	this->unlock();
 }
 
 template class ActiveUdpConnections<Ipv4Addr>;

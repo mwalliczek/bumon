@@ -1,6 +1,6 @@
 language: cpp
 compiler: gcc
-dist: trusty
+dist: xenial
 
 services:
   - mysql
@@ -12,8 +12,8 @@ before_install:
 
 install: 
   # C++17
-  - sudo apt-get install -qq g++-6 libpcap-dev libmysqlclient-dev libcppunit-dev
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
+  - sudo apt-get install -qq g++-7 libpcap-dev libmysqlclient-dev libcppunit-dev
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
 
 addons:
   sonarcloud:

@@ -17,15 +17,22 @@
 #ifndef ACTIVESTATECONNECTIONS_H
 #define ACTIVESTATECONNECTIONS_H
 
+#include <optional>
+
 #include "ActiveConnections.h"
 
 template<typename IP>
 class ActiveStateConnections : public ActiveConnections<IP> {
-protected:
     std::map<ConnectionIdentifier<IP>, int> map;
     std::mutex map_mutex;
+protected:
+    void lock();
+    void unlock();
     Connection* createConnection(IP const & ip_src, int sport, IP const & ip_dst, int dport, u_char protocol, 
             const char *logMessage); 
+    std::optional<std::pair<ConnectionIdentifier<IP>, Connection*>> findConnection(IP const & ip_src, int sport, 
+            IP const & ip_dst, int dport);
+    std::map<ConnectionIdentifier<IP>, int>* getMap();
 public:
     ActiveStateConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs);
 };

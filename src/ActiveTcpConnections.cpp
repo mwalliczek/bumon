@@ -169,10 +169,10 @@ void ActiveTcpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst
 		    ip_dst.toString().c_str(), dport, tcp->th_flags, ip_len);
 	}
 	
+	std::optional<std::pair<ConnectionIdentifier<IP>, Connection*>> findConnectionResult;
 	Connection *foundConnection = NULL;
-	this->map_mutex.lock();
+	this->lock();
 	allConnections_mutex.lock();
-	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter;
 	if ((tcp->th_flags & 18) == 2) {
             foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "new tcp connection");
             if (foundConnection->inbound) {
@@ -180,31 +180,31 @@ void ActiveTcpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst
 	    } else {
 	    	foundConnection->process = findProcesses->findActiveTcpProcess(sport, ip_dst.toString(), dport);
 	    }
-        } else if ((tcp->th_flags & 18) == 18 && 
-        	((iter = this->map.find(ConnectionIdentifier<IP>(ip_dst, dport, ip_src, sport))) != this->map.end())) {
-	    foundConnection = allConnections[iter->second];
-	    debugLog(iter->first, foundConnection, "ack connection");
+        } else if (((tcp->th_flags & 18) == 18) && (findConnectionResult = this->findConnection(ip_dst, dport, ip_src, 
+        	sport)).has_value()) {
+	    foundConnection = findConnectionResult.value().second;
+	    debugLog(findConnectionResult.value().first, foundConnection, "ack connection");
 	    foundConnection->ack = true;
         } else if ((tcp->th_flags & 1) == 1) {
-	    if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_src, sport, ip_dst, dport))) != this->map.end()) {
-	    	foundConnection = allConnections[iter->second];
+	    if ((findConnectionResult = this->findConnection(ip_src, sport, ip_dst, dport)).has_value()) {
+		foundConnection = findConnectionResult.value().second;
 	    	if (0 == foundConnection->end) {
-		    debugLog(iter->first, foundConnection, "stop connection");
+		    debugLog(findConnectionResult.value().first, foundConnection, "stop connection");
 		}
-	    } else if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_dst, dport, ip_src, sport))) != this->map.end()) {
-	    	foundConnection = allConnections[iter->second];
+	    } else if ((findConnectionResult = this->findConnection(ip_dst, dport, ip_src, sport)).has_value()) {
+		foundConnection = findConnectionResult.value().second;
 	    	if (0 == foundConnection->end) {
-		    debugLog(iter->first, foundConnection, "stop connection");
+		    debugLog(findConnectionResult.value().first, foundConnection, "stop connection");
 	    	}
 	    }
 	    if (foundConnection) {
 	    	foundConnection->stop();
 	    }
         } else {
-	    if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_src, sport, ip_dst, dport))) != this->map.end()) {
-	    	foundConnection = allConnections[iter->second];
-	    } else if ((iter = this->map.find(ConnectionIdentifier<IP>(ip_dst, dport, ip_src, sport))) != this->map.end()) {
-	        foundConnection = allConnections[iter->second];
+	    if ((findConnectionResult = this->findConnection(ip_src, sport, ip_dst, dport)).has_value()) {
+		foundConnection = findConnectionResult.value().second;
+	    } else if ((findConnectionResult = this->findConnection(ip_dst, dport, ip_src, sport)).has_value()) {
+		foundConnection = findConnectionResult.value().second;
 	        if (foundConnection->alreadyRunning && !foundConnection->ack) {
 		  foundConnection->ack = true;
 	        }
@@ -226,8 +226,8 @@ void ActiveTcpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst
                 foundConnection->alreadyRunning = true;
 	    }
         }
-        this->map_mutex.unlock();
         allConnections_mutex.unlock();
+        this->unlock();
 	if (foundConnection) {
 	    foundConnection->handleData(ip_len, &packet[size_tcp], ip_len - (size_ip + size_tcp));
         }
@@ -235,11 +235,11 @@ void ActiveTcpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst
 
 template<typename IP>
 void ActiveTcpConnections<IP>::checkTimeout() {
-	this->map_mutex.lock();
-	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter = this->map.begin();
+	this->lock();
+	typename std::map<ConnectionIdentifier<IP>, int>::iterator iter = this->getMap()->begin();
 	time_t current;
 	time(&current);
-	while (iter != this->map.end()) {
+	while (iter != this->getMap()->end()) {
 		allConnections_mutex.lock();
 		Connection* connection = allConnections[iter->second];
 		allConnections_mutex.unlock();
@@ -253,22 +253,22 @@ void ActiveTcpConnections<IP>::checkTimeout() {
 			    logfile->log(2, "aborted connection from %s (%s)", connection->ip->toString().c_str(), 
 			    iter->first.toString().c_str());
 		        }
-        	        iter = this->map.erase(iter);
+        	        iter = this->getMap()->erase(iter);
         	        connection->stop();
         	        continue;
 		}
 		if (connection->end != 0 && difftime(current, connection->end) > 30) {
-        	        iter = this->map.erase(iter);
+        	        iter = this->getMap()->erase(iter);
         	        continue;
 		}
 		if (difftime(current, connection->lastAct) > 3600) {
-        	        iter = this->map.erase(iter);
+        	        iter = this->getMap()->erase(iter);
         	        connection->stop();
         	        continue;
 		}
 		iter++;
 	}
-	this->map_mutex.unlock();
+	this->unlock();
 	logfile->flush();
 }
 
