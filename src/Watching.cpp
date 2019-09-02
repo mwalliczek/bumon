@@ -84,7 +84,7 @@ Watching::~Watching() {
     }
 }
 
-void Watching::addHistory(time_t time, std::map<int, long long int>* traffic) {
+void Watching::addHistory(time_t time, std::shared_ptr<std::map<int, long long int>> traffic) {
     History* newHistory = new History();
     newHistory->time = time;
     newHistory->traffic = traffic;

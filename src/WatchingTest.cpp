@@ -46,7 +46,8 @@ void WatchingTest::testAll() {
 
  Connection* con = new Connection(std::shared_ptr<IpAddr>(new Ipv4Addr("10.69.1.1")), 100, 1, "testProcess", false, false);
  
- std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
+ std::shared_ptr<std::map<int, long long int>> traffic1 = 
+         std::shared_ptr<std::map<int, long long int>>(new std::map<int, long long int>());
  (*traffic1)[con->id] = 100;
  con->handleData(100, (const u_char*) "\r\nHost: www.example.com\r\n", 25);
  
@@ -60,7 +61,8 @@ void WatchingTest::testAll() {
  timeinfo->tm_hour++;
 
  current = mktime(timeinfo);
- std::map<int, long long int>* traffic2 = new std::map<int, long long int>();
+ std::shared_ptr<std::map<int, long long int>> traffic2 = 
+         std::shared_ptr<std::map<int, long long int>>(new std::map<int, long long int>());
  watching->addHistory(current, traffic2);
  watching->watching();
 
@@ -68,8 +70,6 @@ void WatchingTest::testAll() {
 
  allConnections.clear();
  delete con;
- delete traffic1;
- delete traffic2;
  delete ip;
  delete config;
 }
@@ -79,7 +79,8 @@ void WatchingTest::testIntegration() {
  ip = new Ip(config);
  Connection* con = new Connection(std::shared_ptr<IpAddr>(new Ipv4Addr("10.69.1.1")), 80, IPPROTO_TCP, "testProcess", false, false);
  
- std::map<int, long long int>* traffic1 = new std::map<int, long long int>();
+ std::shared_ptr<std::map<int, long long int>> traffic1 = 
+         std::shared_ptr<std::map<int, long long int>>(new std::map<int, long long int>());
  (*traffic1)[con->id] = 100;
  con->handleData(100, (const u_char*) "\r\nHost: www.example.com\r\n", 25);
  
@@ -95,7 +96,8 @@ void WatchingTest::testIntegration() {
  timeinfo->tm_hour++;
 
  current = mktime(timeinfo);
- std::map<int, long long int>* traffic2 = new std::map<int, long long int>();
+ std::shared_ptr<std::map<int, long long int>> traffic2 = 
+         std::shared_ptr<std::map<int, long long int>>(new std::map<int, long long int>());
  sut->addHistory(current, traffic2);
  sut->watching();
 
@@ -104,8 +106,6 @@ void WatchingTest::testIntegration() {
  allConnections.clear();
  delete con;
  delete sut;
- delete traffic1;
- delete traffic2;
  delete ip;
  delete config;
 }

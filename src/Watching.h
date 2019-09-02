@@ -22,13 +22,14 @@
 #include <ctime>
 #include <thread>
 #include <mutex>
+#include <memory>
 
 #include "Stats.h"
 #include "MySql.h"
 
 struct History {
     time_t time;
-    std::map<int, long long int>* traffic;
+    std::shared_ptr<std::map<int, long long int>> traffic;
 };
 
 class Watching {
@@ -47,7 +48,7 @@ class Watching {
                 int expireConnections, int expireStats);
         Watching(const Watching&) = delete;
         ~Watching();
-        void addHistory(time_t time, std::map<int, long long int>* traffic);
+        void addHistory(time_t time, std::shared_ptr<std::map<int, long long int>> traffic);
         void watching();
         bool doWatch;
 };

@@ -19,13 +19,8 @@
 #include "TrafficManager.h"
 
 TrafficManager::TrafficManager() {
-    currentTraffic = new std::map<int, long long int>();
+    currentTraffic = std::shared_ptr<std::map<int, long long int>>(new std::map<int, long long int>());
     time(&currentTime);
-}
-
-TrafficManager::~TrafficManager() {
-    currentTraffic->clear();
-    delete currentTraffic;
 }
 
 void TrafficManager::handleTraffic(int connectionId, int length) {
@@ -34,7 +29,7 @@ void TrafficManager::handleTraffic(int connectionId, int length) {
     if (difftime(newTime, currentTime) > 300) {
         watching->addHistory(currentTime, currentTraffic);
         currentTime = newTime;
-        currentTraffic = new std::map<int, long long int>();
+        currentTraffic = std::shared_ptr<std::map<int, long long int>>(new std::map<int, long long int>());
     }
     std::map<int, long long int>::iterator it = currentTraffic->find(connectionId);
     if (it != currentTraffic->end()) {

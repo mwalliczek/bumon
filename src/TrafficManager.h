@@ -18,16 +18,16 @@
 #define TRAFFICMANAGER_H
 
 #include <map>
+#include <memory>
 
 #include "Watching.h"
 
 class TrafficManager {
-    std::map<int, long long int>* currentTraffic;
+    std::shared_ptr<std::map<int, long long int>> currentTraffic;
     time_t currentTime;
     
     public:
         TrafficManager();
-        ~TrafficManager();
         void handleTraffic(int connectionId, int length);
 };
 
