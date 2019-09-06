@@ -115,17 +115,17 @@ void MySql::bindAndExecute(MYSQL_STMT* stmt, MYSQL_BIND* bind) {
         /* Bind the buffers */
         if (mysql_stmt_bind_param(stmt, bind))
         {
-          logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(stmt));
-          logfile->log(1, " %s\n", mysql_stmt_error(stmt));
+          LOG_ERROR(" mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(stmt));
+          LOG_ERROR(" %s\n", mysql_stmt_error(stmt));
           exit(0);
         }
         /* Execute the INSERT statement - 1*/
         if (!mysql_stmt_execute(stmt)) break;
-        logfile->log(1, " mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(stmt));
-        logfile->log(1, " %s\n", mysql_stmt_error(stmt));
+        LOG_ERROR(" mysql_stmt_execute(), failed: %d\n", mysql_stmt_errno(stmt));
+        LOG_ERROR(" %s\n", mysql_stmt_error(stmt));
           
         if (2013 == mysql_stmt_errno(stmt)) {
-            logfile->log(1, " trying to reconnect mysql");
+            LOG_ERROR(" trying to reconnect mysql");
             destroy();
             init();
         } else {
@@ -236,33 +236,33 @@ std::vector<long long int>* MySql::lookupStats(char* buff, int dst_port, int pro
 
     /* Bind the buffers */
     if (mysql_stmt_bind_param(mysql_stmt_select_stats, bind)) {
-      logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
-      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_select_stats));
+      LOG_ERROR(" mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
+      LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_select_stats));
       exit(0);
     }
     if (mysql_stmt_execute(mysql_stmt_select_stats)) {
-      logfile->log(1, " mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
-      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_select_stats));
+      LOG_ERROR(" mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
+      LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_select_stats));
       exit(0);
     }
     if (mysql_stmt_bind_result(mysql_stmt_select_stats, resultBind)) {
-      logfile->log(1, " mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
-      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_select_stats));
+      LOG_ERROR(" mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
+      LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_select_stats));
       exit(0);
     }
     if (mysql_stmt_store_result(mysql_stmt_select_stats)) {
-      logfile->log(1, " mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
-      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_select_stats));
+      LOG_ERROR(" mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
+      LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_select_stats));
       exit(0);
     }
     my_ulonglong resultCount = mysql_stmt_num_rows(mysql_stmt_select_stats);
-    logfile->log(10, "lookupStats: found %d rows", resultCount);
+    LOG_DEBUG("lookupStats: found %d rows", resultCount);
     std::vector<long long int>* resultVector = new std::vector<long long int>();
     resultVector->reserve(resultCount);
     for (my_ulonglong i=0; i<resultCount; i++) {
       if (mysql_stmt_fetch(mysql_stmt_select_stats)) {
-        logfile->log(1, " mysql_stmt_fetch() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
-        logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_select_stats));
+        LOG_ERROR(" mysql_stmt_fetch() failed: %d\n", mysql_stmt_errno(mysql_stmt_select_stats));
+        LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_select_stats));
         exit(0);
       }
       resultVector->push_back(bytes);
@@ -286,23 +286,23 @@ int MySql::lookupNumberStats(char* buff) {
 
     /* Bind the buffers */
     if (mysql_stmt_bind_param(mysql_stmt_number_stats, bind)) {
-      logfile->log(1, " mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
-      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      LOG_ERROR(" mysql_stmt_bind_param() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_number_stats));
       exit(0);
     }
     if (mysql_stmt_execute(mysql_stmt_number_stats)) {
-      logfile->log(1, " mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
-      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      LOG_ERROR(" mysql_stmt_execute() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_number_stats));
       exit(0);
     }
     if (mysql_stmt_bind_result(mysql_stmt_number_stats, resultBind)) {
-      logfile->log(1, " mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
-      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      LOG_ERROR(" mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_number_stats));
       exit(0);
     }
     if (mysql_stmt_store_result(mysql_stmt_number_stats)) {
-      logfile->log(1, " mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
-      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      LOG_ERROR(" mysql_stmt_bind_result() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_number_stats));
       exit(0);
     }
     my_ulonglong resultCount = mysql_stmt_num_rows(mysql_stmt_number_stats);
@@ -310,8 +310,8 @@ int MySql::lookupNumberStats(char* buff) {
       return 0;
     }
     if (mysql_stmt_fetch(mysql_stmt_number_stats)) {
-      logfile->log(1, " mysql_stmt_fetch() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
-      logfile->log(1, " %s\n", mysql_stmt_error(mysql_stmt_number_stats));
+      LOG_ERROR(" mysql_stmt_fetch() failed: %d\n", mysql_stmt_errno(mysql_stmt_number_stats));
+      LOG_ERROR(" %s\n", mysql_stmt_error(mysql_stmt_number_stats));
       exit(0);
     }
     return number;

@@ -32,7 +32,7 @@ Ipv4Addr::Ipv4Addr(struct in_addr ip): ip(ip) { }
 
 Ipv4Addr::Ipv4Addr(std::string ip) {
     if (1 != inet_pton(AF_INET, ip.c_str(), &(this->ip))) {
-        logfile->log(2, "ip %s could not be parsed", ip.c_str());
+        LOG_WARN("ip %s could not be parsed", ip.c_str());
         this->ip.s_addr = 0;
     } 
 }

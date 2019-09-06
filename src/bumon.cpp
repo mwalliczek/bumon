@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     int c = 0;
     char* configPath = NULL;
     std::string logfilePath, dev;
-    int logLevel = 4;
+    int defaultLogLevel = WARN;
     std::string mysql_host, mysql_user, mysql_pass, mysql_db;
     std::string warning_mail_sender, warning_mail_recipient;
     debug = false;
@@ -167,18 +167,19 @@ int main(int argc, char *argv[])
             dev = optarg;
             break;
         case 'v':
-            logLevel = atoi(optarg);
+            defaultLogLevel = atoi(optarg);
             break;
     }
     
     ConfigfileParser* config = NULL;
+    std::map<std::string, int> loglevels;
     if (NULL != configPath) {
         config = new ConfigfileParser(configPath);
     
         std::map<std::string, std::string>::iterator configIter;
         logfilePath = config->findOption("logfile");
         if ((configIter = config->options.find("loglevel")) != config->options.end()) {
-            logLevel = std::stoi(configIter->second);
+            defaultLogLevel = std::stoi(configIter->second);
         }
         mysql_host = config->findOption("mysql_host");
         mysql_user = config->findOption("mysql_username");
@@ -195,6 +196,7 @@ int main(int argc, char *argv[])
         if ((configIter = config->options.find("expire_stats")) != config->options.end()) {
             expireStats = std::stoi(configIter->second);
         }
+        loglevels = config->loglevels;
     }
     if (dev.empty()) {
         char *defaultDev = pcap_lookupdev(errbuf);
@@ -214,7 +216,7 @@ int main(int argc, char *argv[])
             return(2);
     }
     
-    logfile = new Logfile(logfilePath, logLevel);
+    logfile = new Logfile(logfilePath, defaultLogLevel, loglevels);
 
     findProcesses = new FindProcess();
     findProcesses->init();

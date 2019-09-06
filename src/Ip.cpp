@@ -161,7 +161,7 @@ Ip::Ip(ConfigfileParser* config) {
 			} else {
 				InternNet<Ipv6Addr> internNetv6 = InternNet<Ipv6Addr>(intern.ip, intern.mask);
 				if (!internNetv6.valid) {
-					logfile->log(2, "Could not parse %s / %s", intern.ip.c_str(), intern.mask.c_str());
+					LOG_ERROR("Could not parse %s / %s", intern.ip.c_str(), intern.mask.c_str());
 				} else {
 					internsv6.push_back(internNetv6);
 				}
@@ -174,7 +174,7 @@ Ip::Ip(ConfigfileParser* config) {
 			} else {
 				Ipv6Addr selfv6 = Ipv6Addr(self);
 				if (selfv6.empty()) {
-					logfile->log(2, "Could not parse %s", self.c_str());
+					LOG_ERROR("Could not parse %s", self.c_str());
 				} else {
 					selfsv6.push_back(selfv6);
 				}
@@ -214,7 +214,7 @@ void Ip::handleV4(const u_char *packet) {
 	
 	int size_ip = IP_HL(ipv4)*4;
 	if (size_ip < 20) {
-            logfile->log(9, "   * Invalid IP header length: %u bytes", size_ip);
+            LOG_WARN("   * Invalid IP header length: %u bytes", size_ip);
             return;
         }
 
@@ -235,7 +235,7 @@ void Ip::handleV4(const u_char *packet) {
 		default:
 			Ipv4Addr src = Ipv4Addr(ipv4->ip_src);
 			Ipv4Addr dst = Ipv4Addr(ipv4->ip_dst);
-			logfile->log(2, " %s > %s Protocol: unknown (%d)", src.toString().c_str(),
+			LOG_DEBUG(" %s > %s Protocol: unknown (%d)", src.toString().c_str(),
 				dst.toString().c_str(), ipv4->ip_p);
 			otherv4->handlePacket(src, dst, ntohs(ipv4->ip_len), ipv4->ip_p);
 			return;
@@ -264,7 +264,7 @@ void Ip::handleV6(const u_char *packet) {
 		default:
 			Ipv6Addr src = Ipv6Addr(ipv6->ip_src);
 			Ipv6Addr dst = Ipv6Addr(ipv6->ip_dst);
-			logfile->log(2, " %s > %s Protocol: unknown (%d)", src.toString().c_str(),
+			LOG_DEBUG(" %s > %s Protocol: unknown (%d)", src.toString().c_str(),
 				dst.toString().c_str(), ipv6->ip_p);
 			otherv6->handlePacket(src, dst, ip_len, ipv6->ip_p);
 			return;
@@ -290,7 +290,7 @@ Ip::got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pac
 	} else if (ethernetType == 0x86DD && version == 6) {
 		self->handleV6(&packet[sizeEthernet]);
 	} else {
-		logfile->log(2, "  unknown Protocol %d", ethernetType);
+		LOG_DEBUG("  unknown Protocol %d", ethernetType);
 	}
 }
 

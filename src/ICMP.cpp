@@ -36,8 +36,7 @@ std::string ICMP::getTypeString(u_char type) const {
 
 void ICMP::handlePacket(Ipv4Addr const & src, Ipv4Addr const & dst, uint16_t ip_len, const u_char *packet) const {
     std::string typeString = getTypeString(packet[0]);
-    logfile->log(2, " %s > %s ICMP %s %d", src.toString().c_str(),
-            dst.toString().c_str(), typeString.c_str(), packet[1]);
+    LOG_INFO(" %s > %s ICMP %s %d", src.toString().c_str(), dst.toString().c_str(), typeString.c_str(), packet[1]);
     Connection* connection = this->createSimpleConnection(src, dst, IPPROTO_ICMP);
     connection->content = typeString;
     connection->handleData(ip_len);

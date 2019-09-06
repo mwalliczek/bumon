@@ -169,13 +169,13 @@ void Connection::handleData(int len, const u_char *payload_data, int size_payloa
 	    char *hostname;
 	    int result = parse_tls_header(payload_data, size_payload, &hostname);
 	    if (result >= 0) {
-	    	logfile->log(9, "HTTPS host = %s", hostname);
+	    	LOG_DEBUG("HTTPS host = %s", hostname);
 	    	content = std::string(hostname, result);
 	    	free(hostname);
 		if (debug)
 		    printf("content = %s\n", content.c_str());
 	    } else {
-	    	logfile->log(9, "Can not parse HTTPS header!");
+	    	LOG_DEBUG("Can not parse HTTPS header!");
 	    }
         }
         payload = true;

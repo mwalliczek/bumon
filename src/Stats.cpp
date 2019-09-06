@@ -35,7 +35,7 @@ void Stats::cleanup(char *statsbuff) {
     if (lastStatsTimestamp == std::string(statsbuff)) {
         return;
     }
-    logfile->log(3, "cleanup: %s", statsbuff);
+    LOG_DEBUG("cleanup: %s", statsbuff);
     std::map<std::string, Statistics*>::iterator statsIter = statistics.begin();
     if (mysql_connection != NULL) {
         std::map<std::string, std::string> messages;
@@ -81,7 +81,7 @@ void Stats::cleanup(char *statsbuff) {
     }
     while (statsIter != statistics.end()) {
         if (statsIter->first.rfind(statsbuff, 0) != 0) {
-            logfile->log(3, "%s: %d %lli", statsIter->first.substr(0, 19).c_str(), statsIter->second->dst_port, statsIter->second->sum);
+            LOG_DEBUG("%s: %d %lli", statsIter->first.substr(0, 19).c_str(), statsIter->second->dst_port, statsIter->second->sum);
             if (mysql_connection != NULL && statsIter->second->sum >= 1024) {
                 mysql_connection->insertStats((char*)statsIter->first.substr(0, 19).c_str(), statsIter->second);
             }
@@ -151,7 +151,7 @@ ProcessAndContent* findProcessAndContent(std::map<std::string, ProcessAndContent
 }
 
 std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol, bool intern, bool inbound, long long int sum) {
-    logfile->log(3, "Check spike: %s, %d, %d, %d, %d, %lli", statsbuff, dst_port, protocol, intern, inbound, sum);
+    LOG_DEBUG("Check spike: %s, %d, %d, %d, %d, %lli", statsbuff, dst_port, protocol, intern, inbound, sum);
     std::vector<long long int>* stats = mysql_connection->lookupStats((char*) statsbuff, dst_port, protocol, intern, inbound);
     int length = stats->size();
     int number = mysql_connection->lookupNumberStats((char*) statsbuff);
@@ -165,7 +165,7 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
     }
     long long int q25 = (*stats)[length / 4];
     long long int q75 = (*stats)[length * 3 / 4];
-    logfile->log(3, "Q25: %lli, Q75: %lli", q25, q75);
+    LOG_DEBUG("Q25: %lli, Q75: %lli", q25, q75);
     delete stats;
     long long int qdiff = q75 - q25;
     std::string message;
@@ -207,7 +207,7 @@ std::string Stats::checkSpike(const char* statsbuff, int dst_port, int protocol,
             }
         }
     }
-    logfile->log(3, "Message: %s", message.c_str());
+    LOG_DEBUG("Message: %s", message.c_str());
     return message;
 }
 
@@ -296,7 +296,7 @@ void Stats::sendMail(std::map<std::string, std::string>* messages) {
             fprintf(mailpipe, "Subject: Traffic-Warnung\n\n");
             for (auto& messagesIter : (*messages)) {
                 if (!messagesIter.second.empty()) {
-                    logfile->log(2, "%s: %s", messagesIter.first.substr(0, 19).c_str(), messagesIter.second.c_str());
+                    LOG_DEBUG("%s: %s", messagesIter.first.substr(0, 19).c_str(), messagesIter.second.c_str());
                     fwrite(messagesIter.first.substr(0, 19).c_str(), 1, 19, mailpipe);
                     fwrite("\n", 1, 1, mailpipe);
                     fwrite(messagesIter.second.c_str(), 1, messagesIter.second.length(), mailpipe);
@@ -305,11 +305,11 @@ void Stats::sendMail(std::map<std::string, std::string>* messages) {
             }
             pclose(mailpipe);
         } else {
-            logfile->log(3, "Failed to invoke sendmail");
+            LOG_ERROR("Failed to invoke sendmail");
         }
      } else {
         for (auto& messagesIter : (*messages)) {
-            logfile->log(2, "%s: %s", messagesIter.first.substr(0, 19).c_str(), messagesIter.second.c_str());
+            LOG_INFO("%s: %s", messagesIter.first.substr(0, 19).c_str(), messagesIter.second.c_str());
         }
      }
 }

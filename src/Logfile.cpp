@@ -19,9 +19,10 @@
 #include "Logfile.h"
 #include "bumon.h"
 
-Logfile::Logfile(std::string logfilePath, int logLevel) {
+Logfile::Logfile(std::string logfilePath, int defaultLogLevel, std::map<std::string, int> loglevels): 
+        defaultLogLevel(defaultLogLevel), loglevels(loglevels) {
     if (debug) {
-        printf("Start Logfile: %s %d\n", logfilePath.c_str(), logLevel);
+        printf("Start Logfile: %s %d\n", logfilePath.c_str(), defaultLogLevel);
     }
     if (!logfilePath.empty()) {
         logfile = fopen(logfilePath.c_str(), "a");
@@ -29,7 +30,6 @@ Logfile::Logfile(std::string logfilePath, int logLevel) {
     } else {
         logfile = stdout;
     }
-    this->logLevel = logLevel;
 }
 
 Logfile::~Logfile() {
@@ -47,23 +47,28 @@ void getTime() {
     strftime(buff, 20, "%b %d %H:%M:%S", localtime(&current));
 }
 
-bool Logfile::checkLevel(int logLevel) const {
-    return (logLevel <= this->logLevel);
+bool Logfile::checkLevel(std::string classname, int logLevel) const {
+    auto iter = loglevels.find(classname);
+    int currentLogLevel = defaultLogLevel;
+    if (iter != loglevels.end()) {
+        currentLogLevel = iter->second;
+    }
+    return (logLevel <= currentLogLevel);
 }
 
-void Logfile::log(int logLevel, std::string message) {
-    if (checkLevel(logLevel)) {
+void Logfile::log(std::string classname, int logLevel, std::string message) {
+    if (checkLevel(classname, logLevel)) {
         getTime();
         log_mutex.lock();
-        fprintf(logfile, "%s %s\n", buff, message.c_str());
+        fprintf(logfile, "%s %s: %s\n", buff, classname.c_str(), message.c_str());
         log_mutex.unlock();
     }
 }
 
-void Logfile::log(int logLevel, const char *format, ...) {
-    if (checkLevel(logLevel)) {
+void Logfile::log(std::string classname, int logLevel, const char *format, ...) {
+    if (checkLevel(classname, logLevel)) {
         getTime();
-        fprintf(logfile, "%s ", buff);
+        fprintf(logfile, "%s %s: ", classname.c_str(), buff);
         va_list arg;
         va_start (arg, format);
         vfprintf (logfile, format, arg);
@@ -87,4 +92,20 @@ void Logfile::flush() {
     if (!logfilePath.empty()) {
         fflush(logfile);
     }
+}
+
+int Logfile::parseLoglevel(std::string stringLogLevel) {
+    if ("ERROR" == stringLogLevel) {
+        return ERROR;
+    } else if ("WARN" == stringLogLevel) {
+        return WARN;
+    } else if ("INFO" == stringLogLevel) {
+        return INFO;
+    } else if ("DEBUG" == stringLogLevel) {
+        return DEBUG;
+    } else if ("TRACE" == stringLogLevel) {
+        return TRACE;
+    }
+    fprintf(stderr, "Can not parse LogLevel %s\n", stringLogLevel.c_str());
+    return 0;
 }

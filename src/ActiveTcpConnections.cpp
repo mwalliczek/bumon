@@ -137,8 +137,8 @@ ActiveStateConnections<IP>(interns, selfs) { }
 
 template<typename IP>
 void debugLog(ConnectionIdentifier<IP> identifier, Connection* connection, const char* prefix) {
-    if (logfile->checkLevel(6)) {
-	logfile->log(6, "%s: %s = %d (%s)", prefix, identifier.toString().c_str(), connection->id, 
+    if (LOG_CHECK_DEBUG()) {
+	LOG_DEBUG("%s: %s = %d (%s)", prefix, identifier.toString().c_str(), connection->id, 
 		connection->process.c_str());
     }
 }
@@ -157,15 +157,15 @@ void ActiveTcpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst
 	tcp = (const struct sniff_tcp*)packet;
 	size_tcp = calcOffset(tcp->th_offx2)*4;
 	if (size_tcp < 20) {
-		fprintf(stderr, "   * Invalid TCP header length: %u bytes\n", size_tcp);
+		LOG_DEBUG("   * Invalid TCP header length: %u bytes", size_tcp);
 		return;
 	}
 	
 	int sport = ntohs(tcp->th_sport);
 	int dport = ntohs(tcp->th_dport);
 	
-	if (logfile->checkLevel(10)) {
-	    logfile->log(10, "%s:%d -> %s:%d flags=%d len=%d", ip_src.toString().c_str(), sport, 
+	if (LOG_CHECK_TRACE()) {
+	    LOG_TRACE("%s:%d -> %s:%d flags=%d len=%d", ip_src.toString().c_str(), sport, 
 		    ip_dst.toString().c_str(), dport, tcp->th_flags, ip_len);
 	}
 	
@@ -244,13 +244,13 @@ void ActiveTcpConnections<IP>::checkTimeout() {
 		Connection* connection = allConnections[iter->second];
 		allConnections_mutex.unlock();
 		if (connection->ack == false && connection->end == 0 && difftime(current, connection->begin) > 30) {
-			if (logfile->checkLevel(5)) {
-			    logfile->log(5, "timeout aborted connection: %s (%s)", iter->first.toString().c_str(), 
+			if (LOG_CHECK_DEBUG()) {
+			    LOG_DEBUG("timeout aborted connection: %s (%s)", iter->first.toString().c_str(), 
 			    		connection->process.c_str());
 			}
 				
-        	        if (connection->inbound && connection->alreadyRunning == false && logfile->checkLevel(2)) {
-			    logfile->log(2, "aborted connection from %s (%s)", connection->ip->toString().c_str(), 
+        	        if (connection->inbound && connection->alreadyRunning == false && LOG_CHECK_WARN()) {
+			    LOG_WARN("aborted connection from %s (%s)", connection->ip->toString().c_str(), 
 			    iter->first.toString().c_str());
 		        }
         	        iter = this->getMap()->erase(iter);

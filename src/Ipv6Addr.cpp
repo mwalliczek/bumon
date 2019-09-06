@@ -30,7 +30,7 @@ Ipv6Addr::Ipv6Addr(struct in6_addr ip): ip(ip) { }
 
 Ipv6Addr::Ipv6Addr(std::string ip) {
     if (1 != inet_pton(AF_INET6, ip.c_str(), &(this->ip))) {
-        logfile->log(2, "ip %s could not be parsed", ip.c_str());
+        LOG_WARN("ip %s could not be parsed", ip.c_str());
         this->ip = IN6ADDR_ANY_INIT;
     } 
 }
