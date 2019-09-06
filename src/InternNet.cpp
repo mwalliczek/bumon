@@ -30,11 +30,11 @@ Ipv4Addr InternNet<Ipv4Addr>::calcMask(std::string bits) {
     try {
         cidr = std::stoi(bits);
     } catch (std::invalid_argument& e) {
-        logfile->log(2, "Can not parse mask %s (%s)", bits.c_str(), e.what());
+        LOG_WARN("Can not parse mask %s (%s)", bits.c_str(), e.what());
         return Ipv4Addr(newMask);
     } 
     if (cidr < 1 || cidr > 32) {
-        logfile->log(2, "Invalid mask %s", bits.c_str());
+        LOG_WARN("Invalid mask %s", bits.c_str());
         return Ipv4Addr(newMask);
     }
     int ocets = (cidr + 7) / 8;
@@ -51,11 +51,11 @@ Ipv6Addr InternNet<Ipv6Addr>::calcMask(std::string bits) {
     try {
         cidr = std::stoi(bits);
     } catch (std::invalid_argument& e) {
-        logfile->log(2, "Can not parse mask %s (%s)", bits.c_str(), e.what());
+        LOG_WARN("Can not parse mask %s (%s)", bits.c_str(), e.what());
         return Ipv6Addr(newMask);
     } 
     if (cidr < 1 || cidr > 128) {
-        logfile->log(2, "Invalid mask %s", bits.c_str());
+        LOG_WARN("Invalid mask %s", bits.c_str());
         return Ipv6Addr(newMask);
     }
     for(size_t i=0; i<16; i++) {

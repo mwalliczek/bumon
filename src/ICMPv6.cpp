@@ -36,8 +36,7 @@ std::string ICMPv6::getTypeString(u_char type) const {
 
 void ICMPv6::handlePacket(Ipv6Addr const & src, Ipv6Addr const & dst, uint16_t ip_len, const u_char *packet) const {
     std::string typeString = getTypeString(packet[0]);
-    logfile->log(2, " %s > %s ICMPv6 %s %d", src.toString().c_str(),
-            dst.toString().c_str(), typeString.c_str(), packet[1]);
+    LOG_INFO(" %s > %s ICMPv6 %s %d", src.toString().c_str(), dst.toString().c_str(), typeString.c_str(), packet[1]);
     Connection* connection = this->createSimpleConnection(src, dst, IPPROTO_ICMPV6);
     connection->content = typeString;
     connection->handleData(ip_len);

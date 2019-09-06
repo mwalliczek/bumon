@@ -39,7 +39,7 @@ void callWatching(Watching* watching) {
 
 Watching::Watching(bool startThread) {
     if (debug) {
-        logfile->log(11, "Start Watching");
+        LOG_DEBUG("Start Watching");
     }
     mysql_connection = NULL;
     if (startThread) {
@@ -61,7 +61,7 @@ void Watching::initMySQL(const char* mysql_host, const char* mysql_db, const cha
 Watching::Watching(const char* mysql_host, const char* mysql_db, const char* mysql_username, const char* mysql_password, 
         const char* warning_main_sender, const char* warning_main_recipient, int expireConnections, int expireStats) {
     if (debug) {
-        logfile->log(11, "Start Watching: %s %s %s %s\n", mysql_host, mysql_db, mysql_username, mysql_password);
+        LOG_DEBUG("Start Watching: %s %s %s %s\n", mysql_host, mysql_db, mysql_username, mysql_password);
     }
     initMySQL(mysql_host, mysql_db, mysql_username, mysql_password);
     statistics = new Stats(mysql_connection, warning_main_sender, warning_main_recipient, expireConnections, 
@@ -136,10 +136,10 @@ void Watching::watching() {
             std::map<SumConnectionIdentifier, long long int>::const_iterator it=sumConnections.begin();
             while (it!=sumConnections.end()) {
                 if (it->first.inbound) {
-                    logfile->log(3, "%lli %s > %d (%s) (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
+                    LOG_INFO("%lli %s > %d (%s) (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
                             it->first.process.c_str(), it->first.content.c_str());
                 } else {
-                    logfile->log(3, "%lli > %s:%d (%s) (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
+                    LOG_INFO("%lli > %s:%d (%s) (%s)", it->second, it->first.ip.c_str(), it->first.dst_port, 
                             it->first.process.c_str(), it->first.content.c_str());
                 }
                 if (mysql_connection != NULL) {
@@ -151,7 +151,7 @@ void Watching::watching() {
                 it = sumConnections.erase(it);
             }
             
-            logfile->log(3, "%s: (%lli / %lli)", buff, sumIntern, sumExtern);
+            LOG_INFO("%s: (%lli / %lli)", buff, sumIntern, sumExtern);
 
             if (mysql_connection != NULL) {
                 mysql_connection->insertBandwidth(buff, 300, sumIntern, 1);

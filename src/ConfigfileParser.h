@@ -38,6 +38,7 @@ public:
     std::map<std::string, std::string> options;
     std::list<IpAndMask> interns;
     std::list<std::string> selfs;
+    std::map<std::string, int> loglevels;
 };
 
 #endif

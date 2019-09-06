@@ -42,8 +42,8 @@ Connection* ActiveStateConnections<IP>::createConnection(IP const & ip_src, int 
     ConnectionIdentifier<IP> identifier = ConnectionIdentifier<IP>(ip_src, sport, ip_dst, dport);
     map[identifier] = connection->id;
     
-    if (logfile->checkLevel(6)) {
-	logfile->log(6, "%s: %s = %d", logMessage, identifier.toString().c_str(), connection->id);
+    if (LOG_CHECK_DEBUG()) {
+        LOG_DEBUG("%s: %s = %d", logMessage, identifier.toString().c_str(), connection->id);
     }
     return connection;
 }

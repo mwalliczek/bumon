@@ -16,12 +16,27 @@
 
 #include "ActiveConnections.h"
 
+#include "netimond.h"
+#include "Logfile.h"
 #include "Ipv4Addr.h"
 #include "Ipv6Addr.h"
 
 template<typename IP>
 ActiveConnections<IP>::ActiveConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs):
-    interns(interns), selfs(selfs) { }
+    interns(interns), selfs(selfs) { 
+    if (LOG_CHECK_DEBUG()) {
+        std::string internsString;
+        for (auto &intern : this->interns ) {
+            internsString += " " + intern.toString();
+        }
+        LOG_DEBUG("interns:%s", internsString.c_str());
+        std::string selfsString;
+        for (auto &self : this->selfs ) {
+            selfsString += " " + self.toString(); 
+        }
+        LOG_DEBUG("selfs:%s", selfsString.c_str());
+    }
+}
 
 template<typename IP>
 bool ActiveConnections<IP>::isIntern(IP const & ip) const {
