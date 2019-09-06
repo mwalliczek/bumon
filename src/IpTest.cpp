@@ -18,7 +18,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "bumon.h"
+#include "netimond.h"
 
 #include "Ip.h"
 

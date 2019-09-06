@@ -23,7 +23,7 @@
 #include <exception>
 #include <functional>
 
-#include "bumon.h"
+#include "netimond.h"
 #include "FindProcess.h"
 
 void callProcessAndIterate(const char* cmd, std::function<void (char*&)> func) {

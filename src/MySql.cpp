@@ -19,7 +19,7 @@
 #include <string.h>
 
 #include "Logfile.h"
-#include "bumon.h"
+#include "netimond.h"
 
 #include "MySql.h"
 

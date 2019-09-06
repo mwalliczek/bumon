@@ -2,7 +2,7 @@
 
 newUser='testuser'
 newDbPassword='testpwd'
-newDb='bumondb'
+newDb='netimonddb'
 host=localhost
 #host='%'
  
@@ -10,4 +10,4 @@ commands="CREATE DATABASE \`${newDb}\`;CREATE USER '${newUser}'@'${host}' IDENTI
 TO '${newUser}'@'${host}' IDENTIFIED BY '${newDbPassword}';FLUSH PRIVILEGES;"
 
 mysql -u root --password="" -e "${commands}"
-cat bumon-test.sql | mysql -u ${newUser} -p${newDbPassword} ${newDb}
+cat netimond-test.sql | mysql -u ${newUser} -p${newDbPassword} ${newDb}

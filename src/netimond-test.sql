@@ -1,6 +1,6 @@
 -- MySQL dump 10.16  Distrib 10.2.22-MariaDB, for Linux (x86_64)
 --
--- Host: localhost    Database: netmon
+-- Host: localhost    Database: netimond
 -- ------------------------------------------------------
 -- Server version	10.2.22-MariaDB-log
 

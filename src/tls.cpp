@@ -1,4 +1,4 @@
-/* Adapted to bumon by Matthias Walliczek */
+/* Adapted to netimond by Matthias Walliczek */
 /*
  * Copyright (c) 2011 and 2012, Dustin Lundquist <dustin@null-ptr.net>
  * All rights reserved.
@@ -37,7 +37,7 @@
 #include <sys/types.h>
 #include "tls.h"
 #include <inttypes.h>
-#include "bumon.h"
+#include "netimond.h"
 #include "Logfile.h"
 
 #define SERVER_NAME_LEN 256

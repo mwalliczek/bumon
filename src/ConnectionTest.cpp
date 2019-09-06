@@ -19,7 +19,7 @@
 #include "Connection.h"
 
 #include "Ipv4Addr.h"
-#include "bumon.h"
+#include "netimond.h"
 
 class ConnectionTest : public CPPUNIT_NS::TestFixture
 {

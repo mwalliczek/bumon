@@ -15,7 +15,7 @@
  */
 
 #include "ICMP.h"
-#include "bumon.h"
+#include "netimond.h"
 
 ICMP::ICMP(std::list<InternNet<Ipv4Addr>> const & interns, std::list<Ipv4Addr> const & selfs):
     ActiveConnections<Ipv4Addr>(interns, selfs) { }

@@ -1,12 +1,12 @@
 /*
  * Copyright (c) 2019 Matthias Walliczek
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,9 +17,9 @@
 #include <stdarg.h>
 
 #include "Logfile.h"
-#include "bumon.h"
+#include "netimond.h"
 
-Logfile::Logfile(std::string logfilePath, int defaultLogLevel, std::map<std::string, int> loglevels): 
+Logfile::Logfile(std::string const &logfilePath, int defaultLogLevel, std::map<std::string, int> const &loglevels):
         defaultLogLevel(defaultLogLevel), loglevels(loglevels) {
     if (debug) {
         printf("Start Logfile: %s %d\n", logfilePath.c_str(), defaultLogLevel);
@@ -70,9 +70,9 @@ void Logfile::log(std::string classname, int logLevel, const char *format, ...) 
         getTime();
         fprintf(logfile, "%s %s: ", classname.c_str(), buff);
         va_list arg;
-        va_start (arg, format);
-        vfprintf (logfile, format, arg);
-        va_end (arg);
+        va_start(arg, format);
+        vfprintf(logfile, format, arg);
+        va_end(arg);
         log_mutex.lock();
         fprintf(logfile, "\n");
         log_mutex.unlock();

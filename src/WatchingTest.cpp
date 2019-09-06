@@ -20,7 +20,7 @@
 
 #include <map>
 
-#include "bumon.h"
+#include "netimond.h"
 #include "Connection.h"
 #include "FindProcess.h"
 #include "ConnectionIdentifier.h"
@@ -87,7 +87,7 @@ void WatchingTest::testIntegration() {
  time_t current;
  time(&current);
  
- Watching* sut = new Watching("localhost", "bumondb", "testuser", "testpwd", "root", "nobody", -1, -1);
+ Watching* sut = new Watching("localhost", "netimonddb", "testuser", "testpwd", "root", "nobody", -1, -1);
  
  sut->addHistory(current, traffic1);
  sut->watching();
