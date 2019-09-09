@@ -22,7 +22,7 @@
 
 template<typename IP>
 ConnectionIdentifier<IP>::ConnectionIdentifier(IP const & ip_src, int sport, IP const & ip_dst, int dport):
-        ip_src(ip_src), sport(sport), ip_dst(ip_dst), dport(dport) { }
+        sport(sport), ip_dst(ip_dst), dport(dport), ip_src(ip_src) { }
 
 template<typename IP>
 std::string ConnectionIdentifier<IP>::toString() const {

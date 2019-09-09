@@ -39,7 +39,8 @@ add_executable(netimond
 	Ip.cpp 
 	Ipv4Addr.cpp 
 	Ipv6Addr.cpp 
-	InternNet.cpp
+	Subnet.cpp
+	SuspiciousEvents.cpp
 )
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -68,8 +69,9 @@ add_executable(netimond-test
 	Ip.cpp 
 	Ipv4Addr.cpp 
 	Ipv6Addr.cpp 
-	InternNet.cpp
-	InternNetTest.cpp
+	Subnet.cpp
+	SubnetTest.cpp
+	SuspiciousEvents.cpp
 	ConnectionTest.cpp
 	FindProcessTest.cpp
 	ActiveTcpConnectionsTest.cpp

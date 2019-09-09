@@ -22,8 +22,8 @@
 #include "Ipv6Addr.h"
 
 template<typename IP>
-ActiveConnections<IP>::ActiveConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs):
-    interns(interns), selfs(selfs) { 
+ActiveConnections<IP>::ActiveConnections(std::list<Subnet<IP>> const & interns, std::list<Subnet<IP>> const & selfs):
+        interns(interns), selfs(selfs), suspiciousEvents(SuspiciousEvents<IP>::getInstance()) {
     if (LOG_CHECK_DEBUG()) {
         std::string internsString;
         for (auto &intern : this->interns ) {
@@ -51,7 +51,7 @@ bool ActiveConnections<IP>::isIntern(IP const & ip) const {
 template<typename IP>
 bool ActiveConnections<IP>::isSelf(IP const & ip) const {
     for(const auto selfIter : selfs) {
-        if (selfIter == ip) {
+        if (selfIter.match(ip)) {
             return true;
         }
     }

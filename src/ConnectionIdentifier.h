@@ -21,7 +21,6 @@
 
 template<typename IP>
 class ConnectionIdentifier {
-    IP ip_src;
     int sport;
     IP ip_dst;
     int dport;
@@ -29,6 +28,7 @@ class ConnectionIdentifier {
 public:
     ConnectionIdentifier(IP const & ip_src, int sport, IP const & ip_dst, int dport);
     std::string toString() const;
+    IP ip_src;
     template<typename IP_> friend bool operator<(const ConnectionIdentifier<IP_> &c1, const ConnectionIdentifier<IP_> &c2);
 };
 

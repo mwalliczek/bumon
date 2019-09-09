@@ -132,8 +132,8 @@ int calcOffset(u_char th_offx2) {
 }
 
 template<typename IP>
-ActiveTcpConnections<IP>::ActiveTcpConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs) :
-ActiveStateConnections<IP>(interns, selfs) { }
+ActiveTcpConnections<IP>::ActiveTcpConnections(std::list<Subnet<IP>> const & interns, 
+	std::list<Subnet<IP>> const & selfs) : ActiveStateConnections<IP>(interns, selfs) { }
 
 template<typename IP>
 void debugLog(ConnectionIdentifier<IP> identifier, Connection* connection, const char* prefix) {
@@ -177,6 +177,11 @@ void ActiveTcpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst
             foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_TCP, "new tcp connection");
             if (foundConnection->inbound) {
 	        foundConnection->process = findProcesses->findListenTcpProcess(dport);
+	        if (foundConnection->process.empty()) {
+		    this->suspiciousEvents->connectionToEmpty(ip_src, dport);
+	        } else {
+		    this->suspiciousEvents->connectionToProcess(ip_src, dport);
+	        }
 	    } else {
 	    	foundConnection->process = findProcesses->findActiveTcpProcess(sport, ip_dst.toString(), dport);
 	    }
@@ -249,10 +254,13 @@ void ActiveTcpConnections<IP>::checkTimeout() {
 			    		connection->process.c_str());
 			}
 				
-        	        if (connection->inbound && connection->alreadyRunning == false && LOG_CHECK_WARN()) {
+        	        if (connection->inbound && connection->alreadyRunning == false) {
+			    this->suspiciousEvents->tcpSynTimeout(iter->first.ip_src, connection->dst_port);
+        	            if (LOG_CHECK_WARN()) {
 			    LOG_WARN("aborted connection from %s (%s)", connection->ip->toString().c_str(), 
 			    iter->first.toString().c_str());
 		        }
+			}
         	        iter = this->getMap()->erase(iter);
         	        connection->stop();
         	        continue;

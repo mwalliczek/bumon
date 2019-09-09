@@ -108,6 +108,8 @@
 
 #include "Ip.h"
 
+#include "SuspiciousEvents.h"
+
 /* ethernet headers are always exactly 14 bytes [1] */
 const int sizeEthernet = 14;
 
@@ -149,17 +151,17 @@ struct sniff_ipv6 {
 const int size_ip6 = sizeof(struct sniff_ipv6);
 
 Ip::Ip(ConfigfileParser* config) {
-	std::list<InternNet<Ipv4Addr>> internsv4;
-	std::list<Ipv4Addr> selfsv4;
-	std::list<InternNet<Ipv6Addr>> internsv6;
-	std::list<Ipv6Addr> selfsv6;
+	std::list<Subnet<Ipv4Addr>> internsv4;
+	std::list<Subnet<Ipv4Addr>> selfsv4;
+	std::list<Subnet<Ipv6Addr>> internsv6;
+	std::list<Subnet<Ipv6Addr>> selfsv6;
 	if (NULL != config) {
-		for (auto intern : config->interns) {
-			InternNet<Ipv4Addr> internNetv4 = InternNet<Ipv4Addr>(intern.ip, intern.mask);
+		for (auto &intern : config->interns) {
+			Subnet<Ipv4Addr> internNetv4 = Subnet<Ipv4Addr>(intern.ip, intern.mask);
 			if (internNetv4.valid) {
 				internsv4.push_back(internNetv4);
 			} else {
-				InternNet<Ipv6Addr> internNetv6 = InternNet<Ipv6Addr>(intern.ip, intern.mask);
+				Subnet<Ipv6Addr> internNetv6 = Subnet<Ipv6Addr>(intern.ip, intern.mask);
 				if (!internNetv6.valid) {
 					LOG_ERROR("Could not parse %s / %s", intern.ip.c_str(), intern.mask.c_str());
 				} else {
@@ -167,14 +169,14 @@ Ip::Ip(ConfigfileParser* config) {
 				}
 			}
 		}
-		for (auto self : config->selfs) {
-			Ipv4Addr selfv4 = Ipv4Addr(self);
-			if (!selfv4.empty()) {
+		for (auto &self : config->selfs) {
+			Subnet<Ipv4Addr> selfv4 = Subnet<Ipv4Addr>(self.ip, self.mask);
+			if (selfv4.valid) {
 				selfsv4.push_back(selfv4);
 			} else {
-				Ipv6Addr selfv6 = Ipv6Addr(self);
-				if (selfv6.empty()) {
-					LOG_ERROR("Could not parse %s", self.c_str());
+				Subnet<Ipv6Addr> selfv6 = Subnet<Ipv6Addr>(self.ip, self.mask);
+				if (!selfv6.valid) {
+					LOG_ERROR("Could not parse %s / %s", self.ip.c_str(), self.mask.c_str());
 				} else {
 					selfsv6.push_back(selfv6);
 				}
@@ -299,4 +301,6 @@ void Ip::checkTimeout() {
 	activev4UdpConnections->checkTimeout();
 	activev6TcpConnections->checkTimeout();
 	activev6UdpConnections->checkTimeout();
+	SuspiciousEvents<Ipv4Addr>::getInstance()->cleanup();
+	SuspiciousEvents<Ipv6Addr>::getInstance()->cleanup();
 }

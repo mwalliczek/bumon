@@ -30,8 +30,8 @@ struct sniff_udp {
 };
 
 template<typename IP>
-ActiveUdpConnections<IP>::ActiveUdpConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs) :
-ActiveStateConnections<IP>(interns, selfs) { }
+ActiveUdpConnections<IP>::ActiveUdpConnections(std::list<Subnet<IP>> const & interns, 
+	std::list<Subnet<IP>> const & selfs): ActiveStateConnections<IP>(interns, selfs) { }
 
 template<typename IP>
 void ActiveUdpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst, uint16_t ip_len, 
@@ -65,15 +65,26 @@ void ActiveUdpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst
 		if (this->isSelf(ip_dst) && !(process = findProcesses->findListenUdpProcess(dport)).empty()) {
 		    foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
 		    foundConnection->process = process;
+		    this->suspiciousEvents->connectionToProcess(ip_src, dport);
 		} else if (this->isSelf(ip_src) && !(process = findProcesses->findListenUdpProcess(sport)).empty()) {
 		    foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
 		    foundConnection->process = process;
+		    this->suspiciousEvents->connectionToProcess(ip_dst, sport);
 		} else if (dport < 1024) {
 		    foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
+		    if (foundConnection->inbound) {
+		    	this->suspiciousEvents->connectionToEmpty(ip_src, dport);
+		    }
 		} else if (sport < 1024) {
 		    foundConnection = this->createConnection(ip_dst, dport, ip_src, sport, IPPROTO_UDP, "new udp connection");
+		    if (foundConnection->inbound) {
+		    	this->suspiciousEvents->connectionToEmpty(ip_dst, sport);
+		    }
 		} else {
 		    foundConnection = this->createConnection(ip_src, sport, ip_dst, dport, IPPROTO_UDP, "new udp connection");
+		    if (foundConnection->inbound) {
+		    	this->suspiciousEvents->connectionToEmpty(ip_src, dport);
+		    }
 		}
 	}
 	this->unlock();
