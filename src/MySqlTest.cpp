@@ -18,7 +18,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "bumon.h"
+#include "netimond.h"
 #include "MySql.h"
 
 std::string exec(const char* cmd) {
@@ -49,20 +49,20 @@ class MySqlTest : public CPPUNIT_NS::TestFixture
 CPPUNIT_TEST_SUITE_REGISTRATION( MySqlTest );
 
 void MySqlTest::testConnections() {
-  MySql* sut = new MySql((char *)"localhost", (char *)"bumondb", (char *)"testuser", (char *)"testpwd");
+  MySql* sut = new MySql((char *)"localhost", (char *)"netimonddb", (char *)"testuser", (char *)"testpwd");
   sut->insertConnection((char *)"2019-08-01 17:00:00", 300, "192.168.1.1", 80, 1, (char *)"", (char *)"", 100, 0, 0);
   
-  std::string result = exec("mysql -u testuser --password=testpwd bumondb -e \"SELECT * FROM connections\"");
+  std::string result = exec("mysql -u testuser --password=testpwd netimonddb -e \"SELECT * FROM connections\"");
   CPPUNIT_ASSERT(result != "");
 
   sut->cleanupConnections(-1);
   delete sut;
-  result = exec("mysql -u testuser --password=testpwd bumondb -e \"SELECT * FROM connections\"");
+  result = exec("mysql -u testuser --password=testpwd netimonddb -e \"SELECT * FROM connections\"");
   CPPUNIT_ASSERT(result == "");
 }
 
 void MySqlTest::testStats() {
-  MySql* sut = new MySql((char *)"localhost", (char *)"bumondb", (char *)"testuser", (char *)"testpwd");
+  MySql* sut = new MySql((char *)"localhost", (char *)"netimonddb", (char *)"testuser", (char *)"testpwd");
   
   Statistics stat;
   stat.dst_port = 80;

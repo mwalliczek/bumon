@@ -20,7 +20,7 @@
 #include <netdb.h>
        
 #include "Logfile.h"
-#include "bumon.h"
+#include "netimond.h"
 
 #include "Ipv4Addr.h"
 

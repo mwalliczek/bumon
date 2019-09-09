@@ -19,7 +19,7 @@
 
 #include "Statistics.h"
 
-#include "bumon.h"
+#include "netimond.h"
 
 Stats::Stats(MySql* mysql_connection, const char* sender, const char* recipient, int expireConnections, 
         int expireStats): mysql_connection(mysql_connection), sender(sender), recipient(recipient), 

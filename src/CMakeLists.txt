@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(bumon)
+project(netimond)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -17,8 +17,8 @@ IF(DEFINED ENV{COVERAGE})
 ENDIF()
 
 include_directories(${PROJECT_SOURCE_DIR})
-add_executable(bumon 
-	bumon.cpp 
+add_executable(netimond 
+	netimond.cpp 
 	Logfile.cpp 
 	tls.cpp 
 	Connection.cpp 
@@ -44,10 +44,10 @@ add_executable(bumon
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(bumon Threads::Threads)
+target_link_libraries(netimond Threads::Threads)
 
-add_executable(bumon-test 
-	bumon-test.cpp 
+add_executable(netimond-test 
+	netimond-test.cpp 
 	Logfile.cpp 
 	tls.cpp 
 	Connection.cpp 
@@ -90,7 +90,7 @@ add_executable(bumon-test
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(bumon-test Threads::Threads cppunit)
+target_link_libraries(netimond-test Threads::Threads cppunit)
 
 add_executable(FindProcessIntegrationTest 
 	FindProcess.cpp

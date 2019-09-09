@@ -20,7 +20,7 @@
 #include "InternNet.h"
 #include "Ipv4Addr.h"
 #include "Ipv6Addr.h"
-#include "bumon.h"
+#include "netimond.h"
 
 template <>
 Ipv4Addr InternNet<Ipv4Addr>::calcMask(std::string bits) {

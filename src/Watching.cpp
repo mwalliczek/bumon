@@ -21,7 +21,7 @@
 #include <sstream>
 #include <list>
 
-#include "bumon.h"
+#include "netimond.h"
 #include "Connection.h"
 #include "Watching.h"
 #include "SumConnectionIdentifier.h"

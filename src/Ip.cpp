@@ -104,7 +104,7 @@
  * <end of "sniffex.c" terms>
 */
 
-#include "bumon.h"
+#include "netimond.h"
 
 #include "Ip.h"
 

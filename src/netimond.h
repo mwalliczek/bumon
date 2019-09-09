@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef NETMONITOR_H
-#define NETMONITOR_H
+#ifndef NETIMOND_H
+#define NETIMOND_H
 
 #include <mutex>
 

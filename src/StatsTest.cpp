@@ -18,7 +18,7 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "bumon.h"
+#include "netimond.h"
 #include "Stats.h"
 
 class StatsTest : public CPPUNIT_NS::TestFixture
@@ -34,7 +34,7 @@ class StatsTest : public CPPUNIT_NS::TestFixture
 CPPUNIT_TEST_SUITE_REGISTRATION( StatsTest );
 
 void StatsTest::testCheckSpike() {
- MySql* mysql = new MySql((char *)"localhost", (char *)"bumondb", (char *)"testuser", (char *)"testpwd");
+ MySql* mysql = new MySql((char *)"localhost", (char *)"netimonddb", (char *)"testuser", (char *)"testpwd");
  
  Stats* sut = new Stats(mysql, "root", "nobody", -1, -1);
  

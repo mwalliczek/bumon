@@ -25,7 +25,7 @@
 #include <cppunit/TestRunner.h>
 #include <cppunit/BriefTestProgressListener.h>
 
-#include "bumon.h"
+#include "netimond.h"
 #include "WatchingMock.h"
 #include "Ipv4Addr.h"
 #include "ActiveTcpConnections.h"
