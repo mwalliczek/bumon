@@ -20,8 +20,8 @@
 #include "Ipv6Addr.h"
 
 template<typename IP>
-ActiveStateConnections<IP>::ActiveStateConnections(std::list<InternNet<IP>> const & interns, 
-        std::list<IP> const & selfs): ActiveConnections<IP>(interns, selfs) { }
+ActiveStateConnections<IP>::ActiveStateConnections(std::list<Subnet<IP>> const & interns, 
+        std::list<Subnet<IP>> const & selfs): ActiveConnections<IP>(interns, selfs) { }
 
 template<typename IP>
 void ActiveStateConnections<IP>::lock() {

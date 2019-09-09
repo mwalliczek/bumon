@@ -69,7 +69,15 @@ bool ConfigfileParser::handleIntern(std::string val) {
 bool ConfigfileParser::handleSelf(std::string val) {
     selfs.clear();
     return parseComma(val, [this] (std::string entry) {
-        this->selfs.push_back(entry);
+        size_t slash = entry.find('/');
+        std::string ip, mask;
+        if (slash == std::string::npos) {
+            this->selfs.push_back(IpAndMask(entry, std::string()));
+            return false;
+        }
+        ip = entry.substr(0, slash);
+        mask = entry.substr(slash+1, std::string::npos);
+        this->selfs.push_back(IpAndMask(ip, mask));
         return false;
     });
 }

@@ -32,9 +32,9 @@ class ActiveConnectionsTest : public CPPUNIT_NS::TestFixture
 
 CPPUNIT_TEST_SUITE_REGISTRATION( ActiveConnectionsTest );
 
-std::list<InternNet<Ipv4Addr>*> interns { new InternNet<Ipv4Addr>("10.69.0.0", "255.255.0.0"), 
-        new InternNet<Ipv4Addr>("10.133.96.0", "255.255.224.0") };
-std::list<Ipv4Addr> selfs { Ipv4Addr("10.31.1.100") };
+std::list<Subnet<Ipv4Addr>> interns { Subnet<Ipv4Addr>("10.69.0.0", "255.255.0.0"), 
+        Subnet<Ipv4Addr>("10.133.96.0", "255.255.224.0") };
+std::list<Subnet<Ipv4Addr>> selfs { Subnet<Ipv4Addr>("10.31.1.100", "") };
 
 void ActiveConnectionsTest::testIntern() {
     ActiveConnections<Ipv4Addr> underTest = new ActiveConnections<Ipv4Addr>(interns, selfs);

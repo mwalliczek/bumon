@@ -17,7 +17,7 @@
 #include "ICMPv6.h"
 #include "netimond.h"
 
-ICMPv6::ICMPv6(std::list<InternNet<Ipv6Addr>> const & interns, std::list<Ipv6Addr> const & selfs):
+ICMPv6::ICMPv6(std::list<Subnet<Ipv6Addr>> const & interns, std::list<Subnet<Ipv6Addr>> const & selfs):
     ActiveConnections<Ipv6Addr>(interns, selfs) { }
 
 std::string ICMPv6::getTypeString(u_char type) const {

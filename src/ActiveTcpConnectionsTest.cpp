@@ -42,9 +42,9 @@ class ActiveTcpConnectionsTest : public CPPUNIT_NS::TestFixture
 CPPUNIT_TEST_SUITE_REGISTRATION( ActiveTcpConnectionsTest );
 
 void ActiveTcpConnectionsTest::testAddOutbound() {
- std::list<InternNet<Ipv4Addr>> interns { InternNet<Ipv4Addr>((char*) "10.69.0.0", (char*) "255.255.0.0"),
-        InternNet<Ipv4Addr>((char*) "10.133.96.0", (char*) "255.255.224.0") };
- std::list<Ipv4Addr> selfs { Ipv4Addr((char*) "10.31.1.100") };
+ std::list<Subnet<Ipv4Addr>> interns { Subnet<Ipv4Addr>("10.69.0.0", "255.255.0.0"),
+        Subnet<Ipv4Addr>("10.133.96.0", "255.255.224.0") };
+ std::list<Subnet<Ipv4Addr>> selfs { Subnet<Ipv4Addr>("10.31.1.100", "") };
 
  ActiveTcpConnections<Ipv4Addr>* activeTcpConnections = new ActiveTcpConnections<Ipv4Addr>(interns, selfs);
  ip = new IpMock(activeTcpConnections, NULL);
@@ -76,9 +76,9 @@ void ActiveTcpConnectionsTest::testAddOutbound() {
 }
 
 void ActiveTcpConnectionsTest::testAddInbound() {
- std::list<InternNet<Ipv4Addr>> interns { InternNet<Ipv4Addr>((char*) "10.69.0.0", (char*) "255.255.0.0"),
-        InternNet<Ipv4Addr>((char*) "10.133.96.0", (char*) "255.255.224.0") };
- std::list<Ipv4Addr> selfs { Ipv4Addr((char*) "10.31.1.100") };
+ std::list<Subnet<Ipv4Addr>> interns { Subnet<Ipv4Addr>("10.69.0.0", "255.255.0.0"),
+        Subnet<Ipv4Addr>("10.133.96.0", "255.255.224.0") };
+ std::list<Subnet<Ipv4Addr>> selfs { Subnet<Ipv4Addr>("10.31.1.100", "") };
  ActiveTcpConnections<Ipv4Addr>* activeTcpConnections = new ActiveTcpConnections<Ipv4Addr>(interns, selfs);
  ip = new IpMock(activeTcpConnections, NULL);
  

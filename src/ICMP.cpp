@@ -17,7 +17,7 @@
 #include "ICMP.h"
 #include "netimond.h"
 
-ICMP::ICMP(std::list<InternNet<Ipv4Addr>> const & interns, std::list<Ipv4Addr> const & selfs):
+ICMP::ICMP(std::list<Subnet<Ipv4Addr>> const & interns, std::list<Subnet<Ipv4Addr>> const & selfs):
     ActiveConnections<Ipv4Addr>(interns, selfs) { }
 
 std::string ICMP::getTypeString(u_char type) const {

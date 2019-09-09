@@ -27,11 +27,7 @@
 
 #include "netimond.h"
 #include "WatchingMock.h"
-#include "Ipv4Addr.h"
-#include "ActiveTcpConnections.h"
-#include "ActiveUdpConnections.h"
 #include "FindProcess.h"
-#include "InternNet.h"
 #include "Logfile.h"
 
 Watching* watching;

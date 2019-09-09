@@ -17,14 +17,18 @@
 #include <arpa/inet.h>
 #include <string.h>
 
-#include "InternNet.h"
+#include "Subnet.h"
 #include "Ipv4Addr.h"
 #include "Ipv6Addr.h"
 #include "netimond.h"
 
 template <>
-Ipv4Addr InternNet<Ipv4Addr>::calcMask(std::string bits) {
+Ipv4Addr Subnet<Ipv4Addr>::calcMask(std::string bits) {
     struct in_addr newMask;
+    if (bits.empty()) {
+        newMask.s_addr = INADDR_NONE;
+        return Ipv4Addr(newMask);
+    }
     newMask.s_addr = 0;
     int cidr;
     try {
@@ -45,15 +49,19 @@ Ipv4Addr InternNet<Ipv4Addr>::calcMask(std::string bits) {
 }
 
 template <>
-Ipv6Addr InternNet<Ipv6Addr>::calcMask(std::string bits) {
+Ipv6Addr Subnet<Ipv6Addr>::calcMask(std::string bits) {
     struct in6_addr newMask = IN6ADDR_ANY_INIT;
     int cidr;
-    try {
-        cidr = std::stoi(bits);
-    } catch (std::invalid_argument& e) {
-        LOG_WARN("Can not parse mask %s (%s)", bits.c_str(), e.what());
-        return Ipv6Addr(newMask);
-    } 
+    if (bits.empty()) {
+        cidr = 128;
+    } else {
+        try {
+            cidr = std::stoi(bits);
+        } catch (std::invalid_argument& e) {
+            LOG_WARN("Can not parse mask %s (%s)", bits.c_str(), e.what());
+            return Ipv6Addr(newMask);
+        } 
+    }
     if (cidr < 1 || cidr > 128) {
         LOG_WARN("Invalid mask %s", bits.c_str());
         return Ipv6Addr(newMask);

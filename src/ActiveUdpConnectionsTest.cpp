@@ -39,9 +39,9 @@ class ActiveUdpConnectionsTest : public CPPUNIT_NS::TestFixture
 CPPUNIT_TEST_SUITE_REGISTRATION( ActiveUdpConnectionsTest );
 
 void ActiveUdpConnectionsTest::testAddOutbound() {
- std::list<InternNet<Ipv4Addr>> interns { InternNet<Ipv4Addr>((char*) "10.69.0.0", (char*) "255.255.0.0"),
-        InternNet<Ipv4Addr>((char*) "10.133.96.0", (char*) "255.255.224.0") };
- std::list<Ipv4Addr> selfs { Ipv4Addr((char*) "10.31.1.100") };
+ std::list<Subnet<Ipv4Addr>> interns { Subnet<Ipv4Addr>("10.69.0.0", "255.255.0.0"),
+        Subnet<Ipv4Addr>("10.133.96.0", "255.255.224.0") };
+ std::list<Subnet<Ipv4Addr>> selfs { Subnet<Ipv4Addr>("10.31.1.100", "") };
 
  ActiveUdpConnections<Ipv4Addr>* activeUdpConnections = new ActiveUdpConnections<Ipv4Addr>(interns, selfs);
  ip = new IpMock(NULL, activeUdpConnections);

@@ -24,7 +24,7 @@
 class ICMPv6 : public ActiveConnections<Ipv6Addr> {
     std::string getTypeString(unsigned char) const;
 public:
-    ICMPv6(std::list<InternNet<Ipv6Addr>> const & interns, std::list<Ipv6Addr> const & selfs);
+    ICMPv6(std::list<Subnet<Ipv6Addr>> const & interns, std::list<Subnet<Ipv6Addr>> const & selfs);
     void handlePacket(Ipv6Addr const & ip_src, Ipv6Addr const & ip_dst, uint16_t ip_len, const u_char *packet) const;
 };
 

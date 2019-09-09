@@ -16,13 +16,13 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "InternNet.h"
+#include "Subnet.h"
 #include "Ipv4Addr.h"
 #include "Ipv6Addr.h"
 
-class InternNetTest : public CPPUNIT_NS::TestFixture
+class SubnetTest : public CPPUNIT_NS::TestFixture
 {
- CPPUNIT_TEST_SUITE( InternNetTest );
+ CPPUNIT_TEST_SUITE( SubnetTest );
  CPPUNIT_TEST( testmatchesv4 );
  CPPUNIT_TEST( testmatchesBitsv4 );
  CPPUNIT_TEST( testmatchesNotv4 );
@@ -44,71 +44,79 @@ class InternNetTest : public CPPUNIT_NS::TestFixture
   void testParsev6();
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION( InternNetTest );
+CPPUNIT_TEST_SUITE_REGISTRATION( SubnetTest );
 
-void InternNetTest::testmatchesv4() {
- InternNet<Ipv4Addr> *test = new InternNet<Ipv4Addr>((char *) "10.69.1.0", (char *) "255.255.255.0");
+void SubnetTest::testmatchesv4() {
+ Subnet<Ipv4Addr> *test = new Subnet<Ipv4Addr>((char *) "10.69.1.0", (char *) "255.255.255.0");
  CPPUNIT_ASSERT(test->valid == true);
  CPPUNIT_ASSERT(test->match(Ipv4Addr("10.69.1.1")) == true);
  delete test;
 }
 
-void InternNetTest::testmatchesBitsv4() {
- InternNet<Ipv4Addr> *test = new InternNet<Ipv4Addr>((char *) "10.69.1.0", (char *) "24");
+void SubnetTest::testmatchesBitsv4() {
+ Subnet<Ipv4Addr> *test = new Subnet<Ipv4Addr>((char *) "10.69.1.0", (char *) "24");
  CPPUNIT_ASSERT(test->valid == true);
  CPPUNIT_ASSERT(test->match(Ipv4Addr("10.69.1.1")) == true);
  delete test;
 }
 
-void InternNetTest::testmatchesNotv4() {
- InternNet<Ipv4Addr> *test = new InternNet<Ipv4Addr>((char *) "10.69.0.0", (char *) "255.255.0.0");
+void SubnetTest::testmatchesNotv4() {
+ Subnet<Ipv4Addr> *test = new Subnet<Ipv4Addr>((char *) "10.69.0.0", (char *) "255.255.0.0");
  CPPUNIT_ASSERT(test->match(Ipv4Addr("10.70.1.1")) == false);
  CPPUNIT_ASSERT(test->toString() == "10.69.0.0/255.255.0.0");
  delete test;
 }
 
-void InternNetTest::testParsev4() {
- InternNet<Ipv4Addr> *test = new InternNet<Ipv4Addr>((char *) "10.69.1.0", (char *) "255.255.255.");
+void SubnetTest::testParsev4() {
+ Subnet<Ipv4Addr> *test = new Subnet<Ipv4Addr>("10.69.1.0", "255.255.255.");
  CPPUNIT_ASSERT(test->valid == false);
  delete test;
- test = new InternNet<Ipv4Addr>((char *) "10.69.1.0", (char *) "abc");
+ test = new Subnet<Ipv4Addr>("10.69.1.0", "abc");
  CPPUNIT_ASSERT(test->valid == false);
  delete test;
- test = new InternNet<Ipv4Addr>((char *) "10.69.1.0", (char *) "33");
+ test = new Subnet<Ipv4Addr>("10.69.1.0", "33");
  CPPUNIT_ASSERT(test->valid == false);
+ delete test;
+ test = new Subnet<Ipv4Addr>("10.69.1.0", "");
+ CPPUNIT_ASSERT(test->valid == true);
+ CPPUNIT_ASSERT(test->toString() == "10.69.1.0/255.255.255.255");
  delete test;
 }
 
-void InternNetTest::testmatchesv6() {
- InternNet<Ipv6Addr> *test = new InternNet<Ipv6Addr>((char *) "2001:123::", (char *) "ffff:ffff::");
+void SubnetTest::testmatchesv6() {
+ Subnet<Ipv6Addr> *test = new Subnet<Ipv6Addr>((char *) "2001:123::", (char *) "ffff:ffff::");
  CPPUNIT_ASSERT(test->valid == true);
  CPPUNIT_ASSERT(test->match(Ipv6Addr("2001:123::1")) == true);
  delete test;
 }
 
-void InternNetTest::testmatchesBitsv6() {
- InternNet<Ipv6Addr> *test = new InternNet<Ipv6Addr>((char *) "2001:123::", (char *) "96");
+void SubnetTest::testmatchesBitsv6() {
+ Subnet<Ipv6Addr> *test = new Subnet<Ipv6Addr>((char *) "2001:123::", (char *) "96");
  CPPUNIT_ASSERT(test->valid == true);
  CPPUNIT_ASSERT(test->match(Ipv6Addr("2001:123::1")) == true);
  delete test;
 }
 
-void InternNetTest::testmatchesNotv6() {
- InternNet<Ipv6Addr> *test = new InternNet<Ipv6Addr>((char *) "2001:123::", (char *) "ffff:ffff::");
+void SubnetTest::testmatchesNotv6() {
+ Subnet<Ipv6Addr> *test = new Subnet<Ipv6Addr>((char *) "2001:123::", (char *) "ffff:ffff::");
  CPPUNIT_ASSERT(test->match(Ipv6Addr("2002:234::")) == false);
  CPPUNIT_ASSERT(test->toString() == "2001:123::/ffff:ffff::");
  delete test;
 }
 
-void InternNetTest::testParsev6() {
- InternNet<Ipv6Addr> *test = new InternNet<Ipv6Addr>((char *) "2001:123::", (char *) "ffff:ffff:");
+void SubnetTest::testParsev6() {
+ Subnet<Ipv6Addr> *test = new Subnet<Ipv6Addr>("2001:123::", "ffff:ffff:");
  CPPUNIT_ASSERT(test->valid == false);
  delete test;
- test = new InternNet<Ipv6Addr>((char *) "2001:123::", (char *) "abc");
+ test = new Subnet<Ipv6Addr>("2001:123::", "abc");
  CPPUNIT_ASSERT(test->valid == false);
  delete test;
- test = new InternNet<Ipv6Addr>((char *) "2001:123::", (char *) "129");
+ test = new Subnet<Ipv6Addr>("2001:123::", "129");
  CPPUNIT_ASSERT(test->valid == false);
+ delete test;
+ test = new Subnet<Ipv6Addr>("2001:123::", "");
+ CPPUNIT_ASSERT(test->valid == true);
+ CPPUNIT_ASSERT(test->toString() == "2001:123::/ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
  delete test;
 }
 

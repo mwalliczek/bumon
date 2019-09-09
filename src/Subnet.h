@@ -14,30 +14,30 @@
  * limitations under the License.
  */
 
-#ifndef INTERN_NET_H
-#define INTERN_NET_H
+#ifndef SUBNET_H
+#define SUBNET_H
 
 #include <string>
 
 template<typename IP>
-class InternNet {
+class Subnet {
     IP ip, mask;
     IP calcMask(std::string bits);
     
     public:
-        InternNet(std::string ip, std::string mask);
+        Subnet(std::string ip, std::string mask);
         bool match(IP ip) const;
         bool valid;
         std::string toString();
 };
 
 template<typename IP>
-std::string InternNet<IP>::toString() {
+std::string Subnet<IP>::toString() {
     return ip.toString() + "/" + mask.toString();
 }
 
 template<typename IP>
-InternNet<IP>::InternNet(std::string ip, std::string mask): ip(IP(ip)), mask(IP(mask)) {
+Subnet<IP>::Subnet(std::string ip, std::string mask): ip(IP(ip)), mask(IP(mask)) {
     if (this->ip.empty()) {
         valid = false;
     } else {
@@ -51,7 +51,7 @@ InternNet<IP>::InternNet(std::string ip, std::string mask): ip(IP(ip)), mask(IP(
 }
 
 template<typename IP>
-bool InternNet<IP>::match(IP ip) const {
+bool Subnet<IP>::match(IP ip) const {
     return (ip & this->mask) == this->ip;
 }
 

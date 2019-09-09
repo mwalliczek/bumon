@@ -34,7 +34,7 @@ protected:
             IP const & ip_dst, int dport);
     std::map<ConnectionIdentifier<IP>, int>* getMap();
 public:
-    ActiveStateConnections(std::list<InternNet<IP>> const & interns, std::list<IP> const & selfs);
+    ActiveStateConnections(std::list<Subnet<IP>> const & interns, std::list<Subnet<IP>> const & selfs);
 };
 
 #endif

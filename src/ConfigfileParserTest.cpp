@@ -23,7 +23,6 @@
 
 #include "netimond.h"
 #include "ConfigfileParser.h"
-#include "InternNet.h"
 
 class ConfigfileParserTest : public CPPUNIT_NS::TestFixture
 {
@@ -45,7 +44,8 @@ void ConfigfileParserTest::testAll() {
  CPPUNIT_ASSERT(underTest->findOption("foo", "bar") == "bar");
  CPPUNIT_ASSERT(underTest->interns.size() == 2);
  CPPUNIT_ASSERT(underTest->selfs.size() == 1);
- CPPUNIT_ASSERT(underTest->selfs.front() == "10.31.1.100");
+ CPPUNIT_ASSERT(underTest->selfs.front().ip == "10.31.1.100");
+ CPPUNIT_ASSERT(underTest->selfs.front().mask == "");
  delete underTest;
 }
 
