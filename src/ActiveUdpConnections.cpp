@@ -48,8 +48,8 @@ void ActiveUdpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst
 	int sport = ntohs(udp->th_sport);
 	int dport = ntohs(udp->th_dport);
 
-	if (logfile->checkLevel(10)) {
-	    logfile->log(10, "%s:%d -> %s:%d len=%d", ip_src.toString().c_str(), sport, ip_dst.toString().c_str(), dport, ip_len);
+	if (LOG_CHECK_TRACE()) {
+	    LOG_TRACE("%s:%d -> %s:%d len=%d", ip_src.toString().c_str(), sport, ip_dst.toString().c_str(), dport, ip_len);
 	}
 
 	Connection *foundConnection = NULL;

@@ -87,20 +87,20 @@ int parse_tls_header(const uint8_t *data, size_t data_len, char **hostname) {
      * See RFC5246 Appendix E.2
      */
     if (data[0] & 0x80 && data[2] == 1) {
-        logfile->log(11, "Received SSL 2.0 Client Hello which can not support SNI.");
+        LOG_DEBUG("Received SSL 2.0 Client Hello which can not support SNI.");
         return -2;
     }
 
     tls_content_type = data[0];
     if (tls_content_type != TLS_HANDSHAKE_CONTENT_TYPE) {
-        logfile->log(11, "Request did not begin with TLS handshake.");
+        LOG_DEBUG("Request did not begin with TLS handshake.");
         return -5;
     }
 
     tls_version_major = data[1];
     tls_version_minor = data[2];
     if (tls_version_major < 3) {
-        logfile->log(11, "Received SSL %" PRIu8 ".%" PRIu8 " handshake which can not support SNI.",
+        LOG_DEBUG("Received SSL %" PRIu8 ".%" PRIu8 " handshake which can not support SNI.",
               tls_version_major, tls_version_minor);
 
         return -2;
@@ -122,7 +122,7 @@ int parse_tls_header(const uint8_t *data, size_t data_len, char **hostname) {
         return -5;
     }
     if (data[pos] != TLS_HANDSHAKE_TYPE_CLIENT_HELLO) {
-        logfile->log(11, "Not a client hello");
+        LOG_DEBUG("Not a client hello");
 
         return -5;
     }
@@ -155,7 +155,7 @@ int parse_tls_header(const uint8_t *data, size_t data_len, char **hostname) {
     pos += 1 + len;
 
     if (pos == data_len && tls_version_major == 3 && tls_version_minor == 0) {
-        logfile->log(11, "Received SSL 3.0 handshake without extensions");
+        LOG_DEBUG("Received SSL 3.0 handshake without extensions");
         return -2;
     }
 
@@ -215,7 +215,7 @@ parse_server_name_extension(const uint8_t *data, size_t data_len,
             case 0x00: /* host_name */
                 *hostname = (char*) malloc(len + 1);
                 if (*hostname == NULL) {
-                    logfile->log(10, "malloc() failure");
+                    LOG_WARN("malloc() failure");
                     return -4;
                 }
 
@@ -225,8 +225,7 @@ parse_server_name_extension(const uint8_t *data, size_t data_len,
 
                 return len;
             default:
-                logfile->log(11, "Unknown server name extension name type: %" PRIu8,
-                      data[pos]);
+                LOG_DEBUG("Unknown server name extension name type: %" PRIu8, data[pos]);
         }
         pos += 3 + len;
     }

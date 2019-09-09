@@ -31,9 +31,13 @@ class LogfileTest : public CPPUNIT_NS::TestFixture
 CPPUNIT_TEST_SUITE_REGISTRATION( LogfileTest );
 
 void LogfileTest::test() {
- Logfile *test = new Logfile("", 5);
- test->log(5, "test1");
- test->log(4, "%s %d", "test2", 2);
+ Logfile *test = new Logfile("", Logfile::parseLoglevel("DEBUG"), {{"LogfileTest", TRACE}});
+ test->log("LogfileTest", Logfile::parseLoglevel("TRACE"), "test1");
+ test->log("LogfileTest", DEBUG, "%s %d", "test2", 2);
+ CPPUNIT_ASSERT(test->checkLevel("LogfileTest", TRACE) == true);
+ CPPUNIT_ASSERT(test->checkLevel("LogfileTest", DEBUG) == true);
+ CPPUNIT_ASSERT(test->checkLevel("LogfileTest1", TRACE) == false);
+ CPPUNIT_ASSERT(test->checkLevel("LogfileTest1", DEBUG) == true);
  delete test;
 }
 

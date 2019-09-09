@@ -63,6 +63,7 @@ void InternNetTest::testmatchesBitsv4() {
 void InternNetTest::testmatchesNotv4() {
  InternNet<Ipv4Addr> *test = new InternNet<Ipv4Addr>((char *) "10.69.0.0", (char *) "255.255.0.0");
  CPPUNIT_ASSERT(test->match(Ipv4Addr("10.70.1.1")) == false);
+ CPPUNIT_ASSERT(test->toString() == "10.69.0.0/255.255.0.0");
  delete test;
 }
 
@@ -95,6 +96,7 @@ void InternNetTest::testmatchesBitsv6() {
 void InternNetTest::testmatchesNotv6() {
  InternNet<Ipv6Addr> *test = new InternNet<Ipv6Addr>((char *) "2001:123::", (char *) "ffff:ffff::");
  CPPUNIT_ASSERT(test->match(Ipv6Addr("2002:234::")) == false);
+ CPPUNIT_ASSERT(test->toString() == "2001:123::/ffff:ffff::");
  delete test;
 }
 

@@ -28,7 +28,13 @@ class InternNet {
         InternNet(std::string ip, std::string mask);
         bool match(IP ip) const;
         bool valid;
+        std::string toString();
 };
+
+template<typename IP>
+std::string InternNet<IP>::toString() {
+    return ip.toString() + "/" + mask.toString();
+}
 
 template<typename IP>
 InternNet<IP>::InternNet(std::string ip, std::string mask): ip(IP(ip)), mask(IP(mask)) {

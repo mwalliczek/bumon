@@ -47,7 +47,7 @@ std::string sendmailPath = "cat > sendmail.txt";
 
 int main (int, char**)
 {
-    logfile = new Logfile("", 11);
+    logfile = new Logfile("", DEBUG, std::map<std::string, int>());
     watching = new WatchingMock();
     findProcesses = new FindProcess();
     findProcesses->init();

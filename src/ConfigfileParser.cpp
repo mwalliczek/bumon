@@ -26,6 +26,8 @@
 
 #include "ConfigfileParser.h"
 
+#include "Logfile.h"
+
 IpAndMask::IpAndMask(std::string ip, std::string mask):
     ip(ip), mask(mask) { }
 
@@ -99,6 +101,8 @@ ConfigfileParser::ConfigfileParser(std::string configFile)
                 error = handleIntern(val);
             } else if (id == "self") {
                 error = handleSelf(val);
+            } else if (id.rfind("loglevel.", 0) == 0) {
+                loglevels[id.substr(9)] = Logfile::parseLoglevel(val);
             } else {
                 options[id] = val;
             }
