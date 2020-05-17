@@ -36,13 +36,13 @@ ActiveUdpConnections<IP>::ActiveUdpConnections(std::list<Subnet<IP>> const & int
 template<typename IP>
 void ActiveUdpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst, uint16_t ip_len, 
 		const u_char *packet) {
-	const struct sniff_udp *udp;            /* The TCP header */
+	const struct sniff_udp *udp;            /* The UDP header */
 
 	/*
-	 *  OK, this packet is TCP.
+	 *  OK, this packet is UDP.
 	 */
 
-	/* define/compute tcp header offset */
+	/* define/compute udp header offset */
 	udp = (const struct sniff_udp*)packet;
 
 	int sport = ntohs(udp->th_sport);
