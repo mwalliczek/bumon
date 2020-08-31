@@ -169,6 +169,9 @@ int main(int argc, char *argv[])
         case 'v':
             defaultLogLevel = atoi(optarg);
             break;
+        default:
+            fprintf(stderr, "Usage: %s [-d] [-c config] [-i device] [-v loglvel]\n", argv[0]);
+            exit(EXIT_FAILURE);
     }
     
     ConfigfileParser* config = NULL;
