@@ -39,15 +39,13 @@ Logfile::~Logfile() {
     }
 }
 
-char buff[20];
-
-void getTime() {
+void Logfile::getTime() {
     time_t current;
     time(&current);
-    strftime(buff, 20, "%b %d %H:%M:%S", localtime(&current));
+    strftime(timeBuff, 20, "%b %d %H:%M:%S", localtime(&current));
 }
 
-const char* logLevelName(int logLevel) {
+const char* Logfile::logLevelName(int logLevel) {
     switch (logLevel) {
         case ERROR:
             return "ERROR";
@@ -73,19 +71,10 @@ bool Logfile::checkLevel(std::string const &classname, int logLevel) const {
     return (logLevel <= currentLogLevel);
 }
 
-void Logfile::log(std::string const &classname, int logLevel, std::string const &message) {
-    if (checkLevel(classname, logLevel)) {
-        getTime();
-        log_mutex.lock();
-        fprintf(logfile, "%s %s %s: %s\n", buff, logLevelName(logLevel), classname.c_str(), message.c_str());
-        log_mutex.unlock();
-    }
-}
-
 void Logfile::log(std::string const &classname, int logLevel, const char *format, ...) {
     if (checkLevel(classname, logLevel)) {
         getTime();
-        fprintf(logfile, "%s %s %s: ", buff, logLevelName(logLevel), classname.c_str());
+        fprintf(logfile, "%s %s %s: ", timeBuff, logLevelName(logLevel), classname.c_str());
         va_list arg;
         va_start(arg, format);
         vfprintf(logfile, format, arg);

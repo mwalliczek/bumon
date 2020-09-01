@@ -44,15 +44,19 @@
 class Logfile {
     FILE* logfile;
     std::string logfilePath;
-    int defaultLogLevel;
-    std::map<std::string, int> loglevels;
     std::mutex log_mutex;
+    
+    protected:
+        int defaultLogLevel;
+        std::map<std::string, int> loglevels;
+        const char* logLevelName(int logLevel);
+        char timeBuff[20];
+        void getTime();
     
     public:
         Logfile(std::string const &logfilePath, int defaultLogLevel, std::map<std::string, int> const &loglevels);
         ~Logfile();
-        void log(std::string const &classname, int logLevel, std::string const &message);
-        void log(std::string const &classname, int logLevel, const char *format, ...);
+        virtual void log(std::string const &classname, int logLevel, const char *format, ...);
         bool checkLevel(std::string const &classname, int logLevel) const;
         void hup();
         void flush();

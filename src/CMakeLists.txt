@@ -50,6 +50,7 @@ target_link_libraries(netimond Threads::Threads)
 add_executable(netimond-test 
 	netimond-test.cpp 
 	Logfile.cpp 
+	LogfileMock.cpp 
 	tls.cpp 
 	Connection.cpp 
 	Watching.cpp 

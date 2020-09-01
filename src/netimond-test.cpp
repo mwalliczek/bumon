@@ -28,7 +28,7 @@
 #include "netimond.h"
 #include "WatchingMock.h"
 #include "FindProcess.h"
-#include "Logfile.h"
+#include "LogfileMock.h"
 
 Watching* watching;
 FindProcess* findProcesses;
@@ -43,7 +43,7 @@ std::string sendmailPath = "cat > sendmail.txt";
 
 int main (int, char**)
 {
-    logfile = new Logfile("", DEBUG, std::map<std::string, int>());
+    logfile = new LogfileMock();
     watching = new WatchingMock();
     findProcesses = new FindProcess();
     findProcesses->init();
