@@ -47,6 +47,23 @@ void getTime() {
     strftime(buff, 20, "%b %d %H:%M:%S", localtime(&current));
 }
 
+const char* logLevelName(int logLevel) {
+    switch (logLevel) {
+        case ERROR:
+            return "ERROR";
+        case WARN:
+            return "WARN";
+        case INFO:
+            return "INFO";
+        case DEBUG:
+            return "DEBUG";
+        case TRACE:
+            return "TRACE";
+        default:
+            return "";
+    }
+}
+
 bool Logfile::checkLevel(std::string const &classname, int logLevel) const {
     auto iter = loglevels.find(classname);
     int currentLogLevel = defaultLogLevel;
@@ -60,7 +77,7 @@ void Logfile::log(std::string const &classname, int logLevel, std::string const 
     if (checkLevel(classname, logLevel)) {
         getTime();
         log_mutex.lock();
-        fprintf(logfile, "%s %s: %s\n", buff, classname.c_str(), message.c_str());
+        fprintf(logfile, "%s %s %s: %s\n", buff, logLevelName(logLevel), classname.c_str(), message.c_str());
         log_mutex.unlock();
     }
 }
@@ -68,7 +85,7 @@ void Logfile::log(std::string const &classname, int logLevel, std::string const 
 void Logfile::log(std::string const &classname, int logLevel, const char *format, ...) {
     if (checkLevel(classname, logLevel)) {
         getTime();
-        fprintf(logfile, "%s %s: ", buff, classname.c_str());
+        fprintf(logfile, "%s %s %s: ", buff, logLevelName(logLevel), classname.c_str());
         va_list arg;
         va_start(arg, format);
         vfprintf(logfile, format, arg);
