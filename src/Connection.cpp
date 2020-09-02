@@ -34,6 +34,7 @@ Connection::Connection(std::shared_ptr<IpAddr> ip, u_char protocol, bool inbound
     dst_port = 0;
     lastAct = 0;
     end = 0;
+    dataLength = 0;
     do {
 	id = distribution(generator);
     } while (allConnections.count(id) > 0);
@@ -149,12 +150,13 @@ return;
 
 static std::regex http("\\r\\nHost: (.*)\\r\\n", std::regex_constants::ECMAScript);
 
-void Connection::handleData(int ip_len) {
+void Connection::handleData(unsigned int ip_len) {
     time(&lastAct);
     trafficManager->handleTraffic(id, ip_len);
+    this->dataLength += ip_len;
 }
 
-void Connection::handleData(int len, const u_char *payload_data, int size_payload) {
+void Connection::handleData(unsigned int len, const u_char *payload_data, unsigned int size_payload) {
     handleData(len);
     if (!payload && !alreadyRunning && size_payload > 0) {
 	if (dst_port == 80) {

@@ -40,6 +40,7 @@ Logfile* logfile;
 bool debug = true;
 std::string ssPath = "./ssMock";
 std::string sendmailPath = "cat > sendmail.txt";
+int suspiciousEventsAlarm = 3;
 
 int main (int, char**)
 {

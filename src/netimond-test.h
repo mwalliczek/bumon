@@ -34,6 +34,7 @@ extern LogfileMock* logfile;
 extern Ip* ip;
 extern std::string ssPath;
 extern std::string sendmailPath;
+extern int suspiciousEventsAlarm;
 extern bool debug;
 
 #endif

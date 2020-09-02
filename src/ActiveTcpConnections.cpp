@@ -191,15 +191,19 @@ void ActiveTcpConnections<IP>::handlePacket(IP const & ip_src, IP const & ip_dst
 	    debugLog(findConnectionResult.value().first, foundConnection, "ack connection");
 	    foundConnection->ack = true;
         } else if ((tcp->th_flags & 1) == 1) {
+	    time_t current;
+	    time(&current);
 	    if ((findConnectionResult = this->findConnection(ip_src, sport, ip_dst, dport)).has_value()) {
 		foundConnection = findConnectionResult.value().second;
 	    	if (0 == foundConnection->end) {
 		    debugLog(findConnectionResult.value().first, foundConnection, "stop connection");
+		    this->suspiciousEvents->connectionWithData(foundConnection->inbound ? ip_src : ip_dst, dport, difftime(current, foundConnection->begin), foundConnection->dataLength);
 		}
 	    } else if ((findConnectionResult = this->findConnection(ip_dst, dport, ip_src, sport)).has_value()) {
 		foundConnection = findConnectionResult.value().second;
 	    	if (0 == foundConnection->end) {
 		    debugLog(findConnectionResult.value().first, foundConnection, "stop connection");
+		    this->suspiciousEvents->connectionWithData(foundConnection->inbound ? ip_dst : ip_src, sport, difftime(current, foundConnection->begin), foundConnection->dataLength);
 	    	}
 	    }
 	    if (foundConnection) {

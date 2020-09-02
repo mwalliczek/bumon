@@ -73,6 +73,7 @@ add_executable(netimond-test
 	Subnet.cpp
 	SubnetTest.cpp
 	SuspiciousEvents.cpp
+	SuspiciousEventsTest.cpp
 	ConnectionTest.cpp
 	FindProcessTest.cpp
 	ActiveTcpConnectionsTest.cpp

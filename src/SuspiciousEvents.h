@@ -30,7 +30,7 @@ public:
 class ScanSourceInfo {
 public:
     time_t lastTime;
-    int ratePerHour;
+    int ratePer15m;
     std::set<int> ports;
 };
 
@@ -63,6 +63,7 @@ class SuspiciousEvents {
     std::map<IP, ScanSourceInfo> synToScan;
     std::map<IP, std::pair<time_t, int>> score;
     SuspiciousEvents() { }
+    void addScore(IP const & src, int addScore);
     
 public:
     static std::shared_ptr<SuspiciousEvents> getInstance() {
@@ -74,7 +75,7 @@ public:
     
     void connectionToProcess(IP const & src, int dport);
     void connectionToEmpty(IP const & src, int dport);
-    void connectionWithData(IP const & src, int dport, int duration, long long int data);
+    void connectionWithData(IP const & src, int dport, unsigned int duration, long long unsigned int data);
     void tcpSynTimeout(IP const & src, int dport);
     void iCMPEcho(IP const & src);
     void iCMPUnreachable(IP const & src);

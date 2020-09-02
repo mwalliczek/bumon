@@ -30,8 +30,8 @@ class Connection {
         Connection(std::shared_ptr<IpAddr> ip, u_short dst_port, u_char protocol, std::string process, bool inbound, bool intern);
         Connection(std::shared_ptr<IpAddr> ip, u_char protocol, bool inbound, bool intern);
         void stop();
-        void handleData(int len);
-        void handleData(int len, const u_char *payload, int size_payload);
+        void handleData(unsigned int len);
+        void handleData(unsigned int len, const u_char *payload, unsigned int size_payload);
         int id;
         bool ack;
         time_t lastAct;
@@ -45,6 +45,7 @@ class Connection {
         std::string process;
         bool inbound;
         bool intern;
+        long long unsigned int dataLength;
 };
 
 #endif

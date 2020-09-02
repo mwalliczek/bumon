@@ -129,6 +129,7 @@ Logfile* logfile;
 bool debug;
 std::string ssPath = "ss";
 std::string sendmailPath = "/usr/lib/sendmail -t";
+int suspiciousEventsAlarm = 3;
 
 pcap_t *handle;				/* packet capture handle */
 
@@ -200,6 +201,9 @@ int main(int argc, char *argv[])
             expireStats = std::stoi(configIter->second);
         }
         loglevels = config->loglevels;
+        if ((configIter = config->options.find("suspiciousEventsAlarm")) != config->options.end()) {
+            suspiciousEventsAlarm = std::stoi(configIter->second);
+        }
     }
     if (dev.empty()) {
         char *defaultDev = pcap_lookupdev(errbuf);
